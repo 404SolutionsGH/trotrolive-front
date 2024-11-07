@@ -76,3 +76,134 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+
+.footerNoBbPadding {
+  padding-bottom: 0 !important;
+}
+
+.customPaddingNav-lg {
+  padding: 1rem 4rem !important;
+}
+.customPaddingNav-sm {
+  padding: 1rem 1.8rem !important;
+}
+
+.pgPadding-lg {
+  padding: 5rem 4rem !important;
+}
+
+.pgPadding-sm {
+  padding: 2.5rem 1.8rem !important;
+}
+
+.mobileMenuPad-nav {
+  padding: 5.5rem 3rem;
+}
+
+.paddingGFold-nav {
+  padding: 1rem 1.3rem;
+}
+.paddingGFold {
+  padding: 2.5rem 1.3rem;
+}
+
+
+
+/** Toggle Menu Bar  **/
+
+/* Add this CSS to your styles file (e.g., styles.css) */
+
+
+.mobile-menu {
+  transform: translateX(100%);
+  transition: transform 0.3s ease-in-out;
+  right: 0;
+  top: 0;
+  background-color: #fff;
+  width: 50%;
+  height: 100vh;
+  position: fixed;
+}
+
+.mobile-menu.show {
+  transform: translateX(0);
+}
+
+/* React Transition Group classes */
+.mobile-menu-enter {
+  transform: translateX(100%);
+}
+
+.mobile-menu-enter-active {
+  transform: translateX(0);
+  transition: transform 0.8s ease-in-out;
+}
+
+.mobile-menu-exit {
+  transform: translateX(0);
+}
+
+.mobile-menu-exit-active {
+  transform: translateX(100%);
+  transition: transform 0.9s ease-in-out;
+}
+
+
+/** End Toggle Menu Bar  **/
+
+
+.sticky {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  /* backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.7);  */
+
+  backdrop-filter: blur(10px) saturate(200%);
+  -webkit-backdrop-filter: blur(10px) saturate(200%);
+  background-color: rgba(255, 255, 255, 0.48);
+  border-radius: 0 0 12px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.125);
+}
+
+
+.searchRouteBG {
+  /* backdrop-filter: blur(10px);
+  background-color: rgba(255, 255, 255, 0.7);  */
+
+  backdrop-filter: blur(10px) saturate(200%);
+  -webkit-backdrop-filter: blur(10px) saturate(200%);
+  background-color: rgba(255, 255, 255, 0.48);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.125);
+}
+
+
+/* Home Section | Trotro Vibes */
+
+.trotroVibes-bg {
+  background: rgb(252,240,207);
+  background: linear-gradient(90deg, rgba(252,240,207,1) 0%, rgba(252,238,219,1) 45%, rgba(251,234,245,1) 84%);
+}
+
+.bgSection2 {
+  background: hsla(0, 0%, 100%, 1);
+
+  background: linear-gradient(315deg, hsla(0, 0%, 100%, 1) 0%, hsla(321, 100%, 87%, 1) 57%);
+
+  background: -moz-linear-gradient(315deg, hsla(0, 0%, 100%, 1) 0%, hsla(321, 100%, 87%, 1) 57%);
+
+  background: -webkit-linear-gradient(315deg, hsla(0, 0%, 100%, 1) 0%, hsla(321, 100%, 87%, 1) 57%);
+
+  filter: progid: DXImageTransform.Microsoft.gradient( startColorstr="#FFFFFF", endColorstr="#FFBBE7", GradientType=1 );
+}
+
+
+/* styles.css */
+.SelectContent {
+  width: var(--radix-select-trigger-width);
+  max-height: var(--radix-select-content-available-height);
+}
+
