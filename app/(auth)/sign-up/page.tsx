@@ -8,6 +8,8 @@ import Link from 'next/link';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { toast, ToastContainer } from 'react-toastify';
+import axios from '../../lib/axios';
+
 
   //form values type
   interface FormValues {
@@ -63,10 +65,15 @@ export default function Signup() {
         password: ''
       },
       validationSchema: schema,
-      onSubmit: (values) => {
-        // Simulate API submission
-        console.log(values);
-        toast.success("Form submitted successfully!");
+      onSubmit: async (values) => {
+        try {
+          const response = await axios.post('/register', values);
+          toast.success("Form submitted successfully!");
+          console.log('Response:', response.data);
+        } catch (error) {
+          toast.error("Error submitting the form");
+          console.error('Error:', error);
+        }
       }
     });
 

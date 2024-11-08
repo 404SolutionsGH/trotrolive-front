@@ -1,6 +1,6 @@
 'use client'
-import React, { useState, useEffect } from 'react'
-import Image from 'next/image'
+// import React, { useState, useEffect } from 'react'
+// import Image from 'next/image'
 // import SelectCity from '@/components/UI/select/SelectCity';
 // import CustomSelectOrigin from '@/components/UI/select/SelectLocation';
 // import SelectDestination from '@/components/UI/select/SelectDestination';
@@ -10,235 +10,254 @@ import Image from 'next/image'
 import phone from "../public/assets/phone.svg";
 import playStore from "../public/assets/Google play.svg";
 import appStore from "../public/assets/AppStore.svg";
-import book from "../public/assets/book.svg";
-import card from "../public/assets/card.svg";
-import flag from "../public/assets/flag.svg";
-import Navbar from '@/components/navbar';
-import Footer from '@/components/footer';
+import hero from "../public/assets/home-hero.svg";
+import contact from "../public/assets/pexels-picha-stock-3894377 1.jpg"
+// import book from "../public/assets/book.svg";
+// import card from "../public/assets/card.svg";
+// import flag from "../public/assets/flag.svg";
+// import Navbar from '@/components/navbar';
+// import Footer from '@/components/footer';
 
 
 
-// const options1 = [
-//   { label: 'Options 1', value: '1' },
-//   { label: 'Options 2', value: '2' },
-//   { label: 'Options 3', value: '3' },
-//   { label: 'Options 4', value: ' 4' },
-//   { label: 'Options 5', value: '5' },
-//   { label: 'Options 6', value: '6' },
-//   { label: 'Options 7', value: '7' },
-//   { label: 'Options 8', value: '8' },
-//   { label: 'Options 9', value: '9' },
-//   { label: 'Options 10', value: '10' },
-//   { label: 'Options 11', value: '11' },
-//   { label: 'Options 12', value: '12' },
-//   { label: 'Options 13', value: '13' },
-//   { label: 'Options 14', value: '14' },
-//   { label: 'Options 15', value: '15' },
-//   { label: 'Options 16', value: '16' },
-//   { label: 'Options 17', value: '17' },
-//   { label: 'Options 18', value: '18' },
-//   { label: 'Options 19', value: '19' },
-//   { label: 'Options 20', value: '20' },
-//   { label: 'Options 21', value: '21' },
-//   { label: 'Options 22', value: '22' },
-// ]
-// const options2 = [
-//   { label: 'Options 1', value: '1' },
-//   { label: 'Options 2', value: '2'},
-//   { label: 'Options 3', value: '3' },
-// ]
-// const options3 = [
-//   { label: 'Option 1', value: '1' },
-//   { label: 'Options 2', value: '2' },
-//   { label: 'Options 3', value: '3' },
-// ]
+import Image from "next/image"
+import Link from "next/link"
+import { MapPin, Phone } from "lucide-react"
 
-
-
-
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
 
 export default function Home() {
-
-  const [ isMobile, setIsMobile ] = useState<boolean>(false);
-  // const [ isMobileGFold, setIsMobileGFold ] = useState<boolean>(false);
-
-
-  // const [selectCity, setSelectCity] = useState<string>('');
-  // const [selectOrigin, setSelectOrigin] = useState<string>('');
-  // const [selectDestination, setSelectDestination] = useState<string>('');
-
-
-
-  //Hnadlers
-
-  // const handleSelectChangeCity = (newValue: string) => {
-  //   setSelectCity(newValue)
-  // }
-
-  // const handleSelectChangeOrigin = (newvalue: string) => {
-  //   setSelectOrigin(newvalue)
-  // }
-
-  // const handleSelectChangeDestination = (newValue: string) => {
-  //   setSelectDestination(newValue)
-  // }
-
-
-
-
-  useEffect(() => {
-
-     const handleResize = (): void => {
-         setIsMobile(window.innerWidth < 430 && window.innerWidth > 290)
-     }
-
-     handleResize()
-
-    const handleResizeGFold = (): void => {
-        //  setIsMobileGFold(window.innerWidth < 280)
-
-    }
-
-     handleResizeGFold()
-  }, [])
-
-
-
   return (
+    <div className="flex flex-col min-h-screen">
+      {/* Header */}
+      <header className="border-b">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href="/" className="text-2xl font-bold">
+            logo
+          </Link>
+          <nav className="hidden md:flex items-center gap-6">
+            <Link href="/" className="text-sm font-medium">
+              Home
+            </Link>
+            <Link href="/about" className="text-sm font-medium">
+              About us
+            </Link>
+            <Link href="/services" className="text-sm font-medium">
+              Services
+            </Link>
+            <Link href="/contact" className="text-sm font-medium">
+              Contact us
+            </Link>
+          </nav>
+          <Button variant="secondary" className="bg-pink-100 text-pink-800 hover:bg-pink-200">
+            Sign Up
+          </Button>
+        </div>
+      </header>
 
-    <>
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="relative">
+          <Image
+            src={hero}
+            alt="Person in car"
+            width={1200}
+            height={600}
+            className="w-full h-[800px] object-cover"
+          />
+          <div className="absolute top-1/2 right-8 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg max-w-sm">
+            <h3 className="text-2xl font-extrabold mb-6">
+              Wondering the cost of transportation from anywhere to anywhere?
+            </h3>
+            <div className="space-y-4">
+              <Input placeholder="Enter pickup location" />
+              <Input placeholder="Enter destination" />
+              <Button className="w-full bg-pink-500 hover:bg-pink-600">Check Now</Button>
+            </div>
+          </div>
+        </section>
 
-      <Navbar />
+        {/* Live Station Section */}
+        <section className="grid md:grid-cols-2">
+          <div className="py-10">
+            <div className="w-[68%] bg-navy-50 mx-auto p-10 gap-8 px-16">
+              <h1 className="text-7xl font-extrabold mb-6">All trotro live station on your device</h1>
+              <p className="text-gray-600 mb-6">
+                Our fare system for trotros and taxis is available at over 48 stations points throughout Ghana. Reaching more towns and stations.
+              </p>
+              <Input placeholder="Enter location" className="mb-6" />
+              <p className="text-sm text-gray-600">
+                App on when looking for a partner! You can also find all TROTROS and TAXIS issuing offices in our app.
+              </p>
+            </div>
+          </div>
+          <div className="bg-gray-100 w-full">
+            {/* Map placeholder */}
+            <div className="h-full min-h-[100%] bg-gray-200"></div>
+          </div>
+        </section>
 
-      {/* className={` text-white text-3xl ${isMobile ? 'pgPadding-sm' : 'pgPadding-lg'}`} */}
-        <main >
+        {/* App Promotion */}
+        <section className="bg-pink-50 py-16">
+          <div className="container mx-auto px-4 grid md:grid-cols-2 gap-8 items-center">
+            <Image
+              src={phone}
+              alt="Mobile app screenshot"
+              width={400}
+              height={800}
+              className="mx-auto"
+            />
+            <div>
+              <h1 className="text-7xl font-extrabold mb-6">Best city guide for Trotro rides!</h1>
+              <p className="text-gray-600 mb-6">
+                Lorem ipsum is simply dummy text of the printing and typesetting industry. Lorem ipsum has been the industry&apos;s standard dummy text ever since the
+              </p>
+              <div className="flex gap-4 mb-8">
+                <Image
+                  src={appStore}
+                  alt="Download on App Store"
+                  width={140}
+                  height={42}
+                  className="h-[42px] w-auto"
+                />
+                <Image
+                  src={playStore}
+                  alt="Get it on Google Play"
+                  width={140}
+                  height={42}
+                  className="h-[42px] w-auto"
+                />
+              </div>
+              <div className="space-y-2">
+                <p className="flex items-center gap-2">• Lorem ipsum has been the industry&apos;s standard dummy text ever</p>
+                <p className="flex items-center gap-2">• There are many variations of passages of ipsum available</p>
+                <p className="flex items-center gap-2">• Many variations of passages of ipsum available</p>
+                <p className="flex items-center gap-2">• There are many variations of passages of ipsum available</p>
+              </div>
+            </div>
+          </div>
+        </section>
 
-          <section className="bg-bg-home-hero mt-mt-nav object-cover bg-cover bg-no-repeat bg-center min-h-[40rem]">
-
-            <div className="flex flex-row relative justify-center items-center ">
-
-              <div className="bg-ow-white searchRouteBG absolute rounded-lg px-8 py-8 top-36 right-16  w-[25rem]  max-h-[26rem] min-h-[26rem] sm-425:w-[20rem] sm-425:right-10 sm-412:w-[21.7rem] sm-412:right-8 sm-360:!w-[20rem] sm-360:!right-5 sm-375:!w-[20rem] sm-320:!w-[17.2rem] sm-320:!right-6 sm-390:!right-5">
-                <div className="text-ow-txt mb-6">
-                  <span className="text-xl font-medium sm-320:text-base text-left break-words">Wondering the cost of transportation from anywhere in the country?</span>
+        {/* Features */}
+        <section className="container mx-auto">
+          <div className="grid md:grid-cols-3 gap-8 px-4 py-16">
+            <Card>
+              <CardContent className="p-6 text-center">
+                <div className="w-12 h-12 bg-navy-100 rounded-lg mx-auto mb-4 flex items-center justify-center">
+                  <MapPin className="w-6 h-6" />
                 </div>
-                <div className="flex flex-col gap-4  ">
-                  {/* <SelectCity options={options1} value={selectCity} onChange={handleSelectChangeCity} />
-                  <CustomSelectOrigin options={options2} value={selectOrigin} onChange={handleSelectChangeOrigin} />
-                  <SelectDestination options={options3} value={selectDestination} onChange={handleSelectChangeDestination} /> */}
+                <h3 className="text-xl font-bold mb-3">Get all stations</h3>
+                <p className="text-gray-600 text-sm">
+                  Lorem ipsum has been the industry&apos;s standard dummy text ever. There are many variations of passages of ipsum
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6 text-center">
+                <div className="w-12 h-12 bg-navy-100 rounded-lg mx-auto mb-4 flex items-center justify-center">
+                  <MapPin className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-bold mb-3">Available fares</h3>
+                <p className="text-gray-600 text-sm">
+                  Lorem ipsum has been the industry&apos;s standard dummy text ever. There are many variations of passages of ipsum
+                </p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6 text-center">
+                <div className="w-12 h-12 bg-navy-100 rounded-lg mx-auto mb-4 flex items-center justify-center">
+                  <MapPin className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-bold mb-3">Find missing item</h3>
+                <p className="text-gray-600 text-sm">
+                  Lorem ipsum has been the industry&apos;s standard dummy text ever. There are many variations of passages of ipsum
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+
+        {/* Support Section */}
+        <section className="bg-yellow-50 py-16">
+          <div className="container mx-auto px-4 grid md:grid-cols-2 gap-8 items-center">
+            <div>
+              <h1 className="text-7xl font-extrabold mb-6">Have a question? Our team is happy to assist you</h1>
+              <p className="text-gray-600 mb-6 py-10">
+                Ask about Trotro.ai product, implementation or anything else. Our highly trained reps are standing by, ready to help.
+              </p>
+              <hr className="border-black mb-8"/>
+              <div className="flex gap-4 items-center py-5">
+                <Button className="bg-pink-500 hover:bg-pink-600">Contact Us</Button>
+                <div className="flex items-center gap-2">
+                  <span>or call</span>
+                  <Link href="tel:0556516391" className="text-pink-500 font-semibold underline">
+                    0556 516 391
+                  </Link>
                 </div>
               </div>
             </div>
-          </section>
+            <Image
+              src={contact}
+              alt="Customer support representative"
+              width={450}
+              height={300}
+              className="rounded-lg justify-center mx-auto"
+            />
+          </div>
+        </section>
+      </main>
 
-          {/* 2nd Section */}
-
-          <section className="bgSection2">
-
-            <div className="">
-
-              <div className="flex flex-row  justify-between items-center   sm-412:justify-center sm-412:items-center">
-                <div className={` w-[50%]  sm-412:!w-[100%] md-820:w-[100%] md-820:text-center  sm-412:px-[1.8rem]  ${isMobile ? 'px-[1.8rem] py-[4rem]' : 'pgPadding-lg'} `}>
-                  <h1 className="text-dark-blue font-bold text-[56px] leading-[1] break-words mb-8 sm-412:text-[45px] ">All trotro live station on  your device</h1>
-                  <div className="flex flex-col gap-10">
-                    <p className="text-ow-txt font-normal text-xl">Our fare system for trotros and taxis is available at over 48 stations points throughout Ghana. Reaching more towns and stations.</p>
-                    <p className="text-ow-txt font-normal text-xl">App on when looking for a partner! You can also find all TROTROs and TAXIs issuing offices in our app.</p>
-                  </div>
-                </div>
-                  <div className="bg-bg-map !min-h-[35rem] w-[50%] object-cover bg-cover bg-no-repeat bg-center sm-412:bg-none sm-412:!w-[0] md-820:w-[0] md-820:bg-none bg"></div>
-              </div>
-
+      {/* Footer */}
+      <footer className="bg-white py-12 border-t">
+        <div className="container mx-auto px-4 grid md:grid-cols-4 gap-8">
+          <div>
+            <h3 className="font-semibold mb-4">Our Mission</h3>
+            <p className="text-sm text-gray-600">
+              Lorem ipsum is simply dummy text of the printing and typesetting industry. Lorem ipsum has been the
+            </p>
+          </div>
+          <div>
+            <h3 className="font-semibold mb-4">Services</h3>
+            <ul className="space-y-2 text-sm text-gray-600">
+              <li>Pick a ride</li>
+              <li>Find missing item</li>
+              <li>Live station</li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="font-semibold mb-4">Quick Links</h3>
+            <ul className="space-y-2 text-sm text-gray-600">
+              <li>Home</li>
+              <li>Services</li>
+              <li>About Us</li>
+              <li>Contact Us</li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="font-semibold mb-4">Contact Info</h3>
+            <div className="space-y-2 text-sm text-gray-600">
+              <p className="flex items-center gap-2">
+                <Phone className="w-4 h-4" />
+                0245 985 764
+              </p>
+              <p>info@trotro.ai</p>
             </div>
-
-          </section>
-
-
-           {/***********  Trotro Vibes Mobile section  *****************/}
-
-          <section className={`trotroVibes-bg  ${isMobile ? 'px-[1.8rem] py-[4rem]' : 'pgPadding-lg'}`}>
-            <div className="flex flex-col ">
-              <div className="flex flex-row w-full justify-between  sm-412:flex-col-reverse md-768:flex-col-reverse lg-912:flex-col-reverse lg-912:gap-8">
-                  <div className="w-[30%] sm-412:w-full md-768:w-full lg-912:w-full sm-412:gap-8 lg-912:gap-8 ">
-                      <Image
-                        alt='Trotro Live Mobile App'
-                        src={phone}
-                        className="sm-412:w-[50vw] md-768:w-[30vw] lg-912:w-[30vw] mx-auto md-768:mx-auto"
-                      />
-                  </div>
-                  <div className="w-[50%]  sm-412:w-full md-768:w-full lg-912:w-full">
-                    <h2 className="text-dark-blue text-[56px] font-bold sm-412:text-center sm-412:leading-[1.15] mb-5 md-540:text-center leading-[1.12] lg-912:text-center">Best city guide for Trotro rides!</h2>
-                    <p className="text-ow-txt text-lg font-normal sm-412:text-center">Lorem ipsum dolor sit, amet consectetur adipisicing elit. Aliquid aliquam quae sint quam magni maxime sequi, architecto dignissimos vitae mollitia.</p>
-                    <div className="!w-full flex justify-start gap-8 mt-5 sm-412:flex-col sm-412:items-center md-540:items-center lg-912:flex-row lg-912:justify-center lg-912:items-center lg-912:flex ">
-                      <Image
-                        alt="Play Store Icon"
-                        src={playStore}
-
-                        className="w-[15rem] sm-412:w-[13rem] lg-1024:w-[10rem] lg-912:w-[10rem]"
-                      />
-                      <Image
-                        alt="App Store Icon"
-                        src={appStore}
-                        className="w-[15rem] sm-412:w-[13rem] lg-1024:w-[10rem] lg-912:w-[10rem]"
-                      />
-                    </div>
-                    <div className="mt-5 ">
-                      <h3 className="text-dark-blue font-bold text-2xl mb-3">Features</h3>
-                      <ul className="text-ow-txt ml-10 leading-7 text-lg font-normal">
-                        <li className="list-disc">Lorem ipsum dolor sit amet consectetur, adipisicing elit. Consectetur, tempore.</li>
-                        <li className="list-disc">Lorem ipsum dolor sit amet consectetur adipisicing elit. At, doloremque.</li>
-                        <li className="list-disc">Lorem ipsum dolor sit amet consectetur, adipisicing elit. Numquam, inventore?</li>
-                      </ul>
-                    </div>
-
-                  </div>
-              </div>
-              <div className="flex flex-row gap-16 mt-12 sm-412:flex-col md-768:gap-8 lg-912:gap-8 md-540:flex-col md-540:gap-5">
-                <div className="">
-                  <Image
-                    alt='Book Icon'
-                    src={book}
-                    className="mb-4"
-                  />
-                  <div className="flex flex-col justify-start items-start">
-                    <h3 className="text-dark-blue text-2xl font-bold mb-2">Get all stattions</h3>
-                    <p className="text-ow-txt">Lorem ipsum dolor sit amet consectetur adipisicing elit. Tempora, nulla!</p>
-                  </div>
-                </div>
-                <div className="">
-                  <Image
-                    alt='Book Icon'
-                    src={card}
-                    className="mb-4"
-                  />
-                  <div className="flex flex-col justify-start items-start">
-                    <h3 className="text-dark-blue text-2xl font-bold mb-2">Available Fares</h3>
-                    <p className="text-ow-txt">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Possimus, quod.</p>
-                  </div>
-                </div>
-                <div className="">
-                  <Image
-                    alt='Book Icon'
-                    src={flag}
-                    className="mb-4"
-                  />
-                  <div className="flex flex-col justify-start items-start">
-                    <h3 className="text-dark-blue text-2xl font-bold mb-2">Find missing item</h3>
-                    <p className="text-ow-txt">Lorem ipsum dolor sit amet consectetur adipisicing elit. Repellat, iste!</p>
-                  </div>
-                </div>
-
-              </div>
+          </div>
+        </div>
+        <div className="container mx-auto px-4 mt-8 pt-8 border-t">
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-gray-600">© 2024 404 Solutions Inc.</div>
+            <div className="flex gap-4 text-sm text-gray-600">
+              <span>English</span>
+              <span>Accra</span>
+              <Link href="/terms">Terms</Link>
+              <Link href="/privacy">Privacy</Link>
             </div>
-          </section>
-
-          {/*****************  Contact Us Section *******************/}
-          <section id="contact-us" className={` bg-primary-yellow-light ${isMobile ? 'px-[1.8rem] py-[4rem]' : 'pgPadding-lg'}`}>
-            {/* <ContactUs /> */}
-          </section>
-
-        </main>
-
-        <Footer />
-    </>
-
+          </div>
+        </div>
+      </footer>
+    </div>
   )
 }
