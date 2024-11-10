@@ -15,22 +15,29 @@ import { AxiosError } from 'axios';
 
 //form values type
 interface FormValues {
-    name: string;
+    full_name: string;
     email: string;
     phone_number: string;
     password: string;
+    password2: string;
 }
 
 interface ErrorResponse {
   message: string;
+  error?: {
+    [key: string]: string[];
+  }
 }
 
 // Full Name Regex
 const fullNameRegex = /^[A-Za-z]+(?:[-\s'][A-Za-z]+)*$/;
 
+// Phone number regex for Ghana numbers
+const phoneRegex = /^(?:233|0)(?:20|24|23|26|27|23|24|54|55|59|27|57|26|56|28|58|50|51|52|53)\d{7}$/;
+
 // Validation Schema
 const schema = yup.object().shape({
-    name: yup
+    full_name: yup
         .string()
         .required("Full Name is required")
         .matches(fullNameRegex, 'Invalid full name')
@@ -45,7 +52,7 @@ const schema = yup.object().shape({
     phone_number: yup
         .string()
         .required("Phone number is required")
-        .matches(/^[0-9]+$/, 'Phone number must be numeric')
+        .matches(phoneRegex, 'Phone number must be numeric')
         .length(10, "Phone number must be exactly 10 characters long"),
 
     password: yup
@@ -56,25 +63,47 @@ const schema = yup.object().shape({
         .matches(/[!@#$%^&*(),.?":{}|<>]/, 'Use a symbol (e.g. !@#$)')
         .min(8, 'Use 8 or more characters')
         .max(50, 'Password must be at most 50 characters'),
+
+    password2: yup
+        .string()
+        .required("Password confirmation is required")
+        .oneOf([yup.ref('password')], 'Passwords must match'),
 });
 
 export default function SignUp() {
 
   const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [errorVisibility, setErrorVisibility] = useState<{ [key: string]: boolean }>({});
 
     const formik = useFormik<FormValues>({
       initialValues: {
-        name: '',
+        full_name: '',
         email: '',
         phone_number: '',
-        password: ''
+        password: '',
+        password2: ''
       },
       validationSchema: schema,
       onSubmit: async (values) => {
         try {
-          const response = await axios.post('/accounts/register', values);
-          toast.success("Form submitted successfully!", {
+          // Format phone number to include country code if needed
+          const formattedPhone = values.phone_number.startsWith('0')
+            ? '233' + values.phone_number.slice(1)
+            : values.phone_number;
+
+          const payload = {
+            full_name: values.full_name,
+            email: values.email,
+            phone_number: formattedPhone,
+            password: values.password,
+            password2: values.password2
+          };
+
+          const response = await axios.post('/register/passenger/', payload);
+          console.log(response);
+
+          toast.success("Registration successful!", {
             position: "top-center",
             autoClose: 5000,
             hideProgressBar: false,
@@ -82,10 +111,27 @@ export default function SignUp() {
             pauseOnHover: true,
             draggable: true,
           });
-          console.log('Response:', response.data);
+
+          // Redirect to login or dashboard after successful registration
+          // router.push('/login');
+
         } catch (error) {
           const axiosError = error as AxiosError<ErrorResponse>;
-          const errorMsg = axiosError.response?.data?.message || "Error submitting the form";
+          let errorMsg = "Registration failed. Please try again.";
+
+          // Handle different types of error responses
+          if (axiosError.response?.data) {
+            const errorData = axiosError.response.data;
+            if (typeof errorData.message === 'string') {
+              errorMsg = errorData.message;
+            } else if (errorData.error) {
+              // Combine all error messages
+              errorMsg = Object.values(errorData.error)
+                .flat()
+                .join(', ');
+            }
+          }
+
           toast.error(errorMsg, {
             position: "top-center",
             autoClose: 5000,
@@ -94,7 +140,6 @@ export default function SignUp() {
             pauseOnHover: true,
             draggable: true,
           });
-          console.error('Error:', axiosError);
         }
       }
     });
@@ -146,20 +191,20 @@ export default function SignUp() {
 
             <form onSubmit={formik.handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="name" className="sr-only">
+                <Label htmlFor="full_name" className="sr-only">
                   Name
                 </Label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-3 flex items-center">
                     <User className="h-4 w-4 text-gray-500" />
                   </div>
-                  <Input id="name" placeholder="Name" className="pl-10"
-                  value={formik.values.name}
+                  <Input id="full_name" placeholder="Name" className="pl-10"
+                  value={formik.values.full_name}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}/>
                 </div>
-                {formik.touched.name && formik.errors.name && errorVisibility.name && (
-                  <div className="text-red-500 text-sm">{formik.errors.name}</div>
+                {formik.touched.full_name && formik.errors.full_name && errorVisibility.full_name && (
+                  <div className="text-red-500 text-sm">{formik.errors.full_name}</div>
                 )}
               </div>
 
@@ -238,6 +283,42 @@ export default function SignUp() {
                 </div>
                 {formik.touched.password && formik.errors.password && errorVisibility.password && (
                     <div className="text-red-500 text-sm">{formik.errors.password}</div>
+                )}
+              </div>
+
+              {/* Confirm Password Input */}
+              <div className="space-y-2">
+                <Label htmlFor="password2" className="sr-only">Confirm Password</Label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-3 flex items-center">
+                    <Lock className="h-4 w-4 text-gray-500" />
+                  </div>
+                  <Input
+                    id="password2"
+                    name="password2"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm Password"
+                    className="pl-10 pr-10"
+                    value={formik.values.password2}
+                    onChange={formik.handleChange}
+                    onBlur={formik.handleBlur}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute inset-y-0 right-0 px-3 hover:bg-transparent"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-500" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-500" />
+                    )}
+                  </Button>
+                </div>
+                {formik.touched.password2 && formik.errors.password2 && (
+                  <div className="text-red-500 text-sm">{formik.errors.password2}</div>
                 )}
               </div>
 
