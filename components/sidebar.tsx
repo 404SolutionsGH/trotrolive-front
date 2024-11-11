@@ -31,7 +31,7 @@ export function Sidebar() {
 
           {sidebarOpen.accounts && (
             <>
-            <Link href="/users">
+            <Link href="/admin/users">
             <Button
               className={`justify-between w-full ${
                 pathname.startsWith('/users') ? 'bg-muted' : ''
@@ -42,7 +42,7 @@ export function Sidebar() {
               <Plus className="h-4 w-4" />
             </Button>
           </Link>
-          <Link href="/users">
+          <Link href="/admin/users">
             <Button
               className={`justify-between w-full ${
                 pathname.startsWith('/users') ? 'bg-muted' : ''
@@ -53,7 +53,7 @@ export function Sidebar() {
               <Plus className="h-4 w-4" />
             </Button>
           </Link>
-          <Link href="/users">
+          <Link href="/admin/users">
             <Button
               className={`justify-between w-full ${
                 pathname.startsWith('/users') ? 'bg-muted' : ''
@@ -79,7 +79,7 @@ export function Sidebar() {
           </Button>
 
         {sidebarOpen.admin && (
-          <Link href="/theme">
+          <Link href="/admin/theme">
             <Button className="justify-between w-full" variant="ghost">
               Theme
               <Plus className="h-4 w-4" />
@@ -100,7 +100,7 @@ export function Sidebar() {
 
           {sidebarOpen.stations && (
         <>
-          <Link href="/stations">
+          <Link href="/admin/stations">
             <Button
               className={`justify-between w-full ${
                 pathname === '/stations' ? 'bg-muted' : ''
@@ -111,7 +111,7 @@ export function Sidebar() {
               <Plus className="h-4 w-4" />
             </Button>
           </Link>
-          <Link href="/routes">
+          <Link href="/admin/routes">
             <Button
               className={`justify-between w-full ${
                 pathname === '/routes' ? 'bg-muted' : ''
@@ -122,7 +122,7 @@ export function Sidebar() {
               <Plus className="h-4 w-4" />
             </Button>
           </Link>
-          <Link href="/vehicles">
+          <Link href="/admin/vehicles">
             <Button
               className={`justify-between w-full ${
                 pathname === '/vehicles' ? 'bg-muted' : ''

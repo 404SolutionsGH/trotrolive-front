@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
-import { UserForm } from "./user-form"
+import { UserForm } from "./add/user-form"
 
 export default function AddUserPage() {
   return (
