@@ -1,143 +1,61 @@
 "use client"
 
-import { ChevronDown, Plus } from "lucide-react"
+import { CreditCard, HelpCircle, LayoutDashboard, LogOut, Settings, Star } from 'lucide-react'
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { usePathname } from "next/navigation"
-import { useState } from "react"
 
 export function Sidebar() {
 
-    const [sidebarOpen, setSidebarOpen] = useState({
-        accounts: true,
-        admin: true,
-        stations: true,
-    })
-
-  const pathname = usePathname()
-
   return (
-    <aside className="w-[250px] border-r">
-      <nav className="grid gap-1 p-2">
-        <div className="grid gap-1">
-          <Button
-            className="justify-between bg-[#D81B60] text-white hover:bg-[#C2185B]"
-            variant="ghost"
-            onClick={() => setSidebarOpen({ ...sidebarOpen, accounts: !sidebarOpen.accounts })}
-          >
-            Accounts
-            <ChevronDown className={`h-4 w-4 transition-transform ${sidebarOpen.accounts ? 'rotate-180' : ''}`} />
-          </Button>
-
-          {sidebarOpen.accounts && (
-            <>
-            <Link href="/admin/users">
-            <Button
-              className={`justify-between w-full ${
-                pathname.startsWith('/users') ? 'bg-muted' : ''
-              }`}
-              variant="ghost"
-            >
-              Station Master
-              <Plus className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Link href="/admin/users">
-            <Button
-              className={`justify-between w-full ${
-                pathname.startsWith('/users') ? 'bg-muted' : ''
-              }`}
-              variant="ghost"
-            >
-              Basic User
-              <Plus className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Link href="/admin/users">
-            <Button
-              className={`justify-between w-full ${
-                pathname.startsWith('/users') ? 'bg-muted' : ''
-              }`}
-              variant="ghost"
-            >
-              Premium User
-              <Plus className="h-4 w-4" />
-            </Button>
-          </Link>
-          </>
-        )}
+    <div className="hidden w-64 flex-col bg-[#B4257A] text-white md:flex">
+        <div className="p-6">
+          <div className="flex items-center gap-2">
+            <div className="rounded-full bg-white p-2">
+              <CreditCard className="h-6 w-6 text-[#B4257A]" />
+            </div>
+            <span className="text-xl font-semibold">Trotro</span>
+          </div>
         </div>
-
-        <div className="grid gap-1">
-          <Button
-            className="justify-between bg-[#D81B60] text-white hover:bg-[#C2185B]"
-            variant="ghost"
-            onClick={() => setSidebarOpen({ ...sidebarOpen, admin: !sidebarOpen.admin })}
+        <nav className="flex-1 space-y-2 py-4">
+          <h2 className="mb-6 px-4 text-2xl font-bold">Menu</h2>
+          <Link
+            href="#"
+            className="flex items-center gap-3 rounded-none bg-white/10 px-4 py-2 text-white transition-colors hover:bg-white/20"
           >
-            Admin
-            <ChevronDown className={`h-4 w-4 transition-transform ${sidebarOpen.admin ? 'rotate-180' : ''}`} />
-          </Button>
-
-        {sidebarOpen.admin && (
-          <Link href="/admin/theme">
-            <Button className="justify-between w-full" variant="ghost">
-              Theme
-              <Plus className="h-4 w-4" />
-            </Button>
+            <LayoutDashboard className="h-5 w-5" />
+            Dashboard
           </Link>
-        )}
-        </div>
-
-        <div className="grid gap-1">
-          <Button
-            className="justify-between bg-[#D81B60] text-white hover:bg-[#C2185B]"
-            variant="ghost"
-            onClick={() => setSidebarOpen({ ...sidebarOpen, stations: !sidebarOpen.stations })}
+          <Link
+            href="#"
+            className="flex items-center gap-3 rounded-none px-4 py-2 text-white transition-colors hover:bg-white/20"
           >
-            Stations
-            <ChevronDown className={`h-4 w-4 transition-transform ${sidebarOpen.stations ? 'rotate-180' : ''}`} />
+            <Star className="h-5 w-5" />
+            Role Upgrade
+          </Link>
+          <Link
+            href="#"
+            className="flex items-center gap-3 rounded-none px-4 py-2 text-white transition-colors hover:bg-white/20"
+          >
+            <Settings className="h-5 w-5" />
+            Settings
+          </Link>
+          <Link
+            href="#"
+            className="flex items-center gap-3 rounded-none px-4 py-2 text-white transition-colors hover:bg-white/20"
+          >
+            <HelpCircle className="h-5 w-5" />
+            About
+          </Link>
+        </nav>
+        <div className="w-[90%] py-4">
+          <Button
+            variant="secondary"
+            className="w-full justify-start gap-2 rounded-l-none rounded-r-md bg-[#CD783F] text-white hover:bg-[#CD783F]/90"
+          >
+            <LogOut className="h-5 w-5" />
+            Logout
           </Button>
-
-          {sidebarOpen.stations && (
-        <>
-          <Link href="/admin/stations">
-            <Button
-              className={`justify-between w-full ${
-                pathname === '/stations' ? 'bg-muted' : ''
-              }`}
-              variant="ghost"
-            >
-              Stations
-              <Plus className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Link href="/admin/routes">
-            <Button
-              className={`justify-between w-full ${
-                pathname === '/routes' ? 'bg-muted' : ''
-              }`}
-              variant="ghost"
-            >
-              Routes
-              <Plus className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Link href="/admin/vehicles">
-            <Button
-              className={`justify-between w-full ${
-                pathname === '/vehicles' ? 'bg-muted' : ''
-              }`}
-              variant="ghost"
-            >
-              Vehicles
-              <Plus className="h-4 w-4" />
-            </Button>
-          </Link>
-        </>
-          )}
-
         </div>
-      </nav>
-    </aside>
+      </div>
   )
 }
