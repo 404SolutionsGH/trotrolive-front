@@ -23,10 +23,27 @@ import contact from "../public/assets/pexels-picha-stock-3894377 1.jpg"
 import Image from "next/image"
 import Link from "next/link"
 import { MapPin, Phone } from "lucide-react"
+import { Book, CreditCard, Flag } from 'lucide-react'
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
+// import { Card, CardContent } from "@/components/ui/card"
+
+interface FeatureItemProps {
+  icon: React.ReactNode
+  title: string
+  description: string
+}
+
+const FeatureItem: React.FC<FeatureItemProps> = ({ icon, title, description }) => (
+  <div className="p-6 flex flex-col items-start">
+    <div className="w-12 h-12 rounded bg-primary flex items-center justify-center mb-4">
+      {icon}
+    </div>
+    <h2 className="text-xl font-semibold mb-2">{title}</h2>
+    <p className="text-muted-foreground">{description}</p>
+  </div>
+)
 
 export default function Home() {
   return (
@@ -100,7 +117,7 @@ export default function Home() {
         </section>
 
         {/* App Promotion */}
-        <section className="bg-pink-50 py-16">
+        <section className="bg-gradient-to-r from-pink-50 via-yellow-50 to-yellow-100 py-16">
           <div className="container mx-auto px-4 grid md:grid-cols-2 gap-8 items-center">
             <Image
               src={phone}
@@ -138,49 +155,33 @@ export default function Home() {
               </div>
             </div>
           </div>
-        </section>
+
 
         {/* Features */}
-        <section className="container mx-auto">
-          <div className="grid md:grid-cols-3 gap-8 px-4 py-16">
-            <Card>
-              <CardContent className="p-6 text-center">
-                <div className="w-12 h-12 bg-navy-100 rounded-lg mx-auto mb-4 flex items-center justify-center">
-                  <MapPin className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Get all stations</h3>
-                <p className="text-gray-600 text-sm">
-                  Lorem ipsum has been the industry&apos;s standard dummy text ever. There are many variations of passages of ipsum
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6 text-center">
-                <div className="w-12 h-12 bg-navy-100 rounded-lg mx-auto mb-4 flex items-center justify-center">
-                  <MapPin className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Available fares</h3>
-                <p className="text-gray-600 text-sm">
-                  Lorem ipsum has been the industry&apos;s standard dummy text ever. There are many variations of passages of ipsum
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-6 text-center">
-                <div className="w-12 h-12 bg-navy-100 rounded-lg mx-auto mb-4 flex items-center justify-center">
-                  <MapPin className="w-6 h-6" />
-                </div>
-                <h3 className="text-xl font-bold mb-3">Find missing item</h3>
-                <p className="text-gray-600 text-sm">
-                  Lorem ipsum has been the industry&apos;s standard dummy text ever. There are many variations of passages of ipsum
-                </p>
-              </CardContent>
-            </Card>
+          <div className="p-10">
+            <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+              <FeatureItem
+                icon={<Book className="w-6 h-6 text-primary-foreground" />}
+                title="Get all stations"
+                description="Lorem Ipsum has been the industry's standard dummy text ever There are many variations of passages of Ipsum"
+              />
+              <FeatureItem
+                icon={<CreditCard className="w-6 h-6 text-primary-foreground" />}
+                title="Availabel fares"
+                description="Lorem Ipsum has been the industry's standard dummy text ever There are many variations of passages of Ipsum"
+              />
+              <FeatureItem
+                icon={<Flag className="w-6 h-6 text-primary-foreground" />}
+                title="Find missing item"
+                description="Lorem Ipsum has been the industry's standard dummy text ever There are many variations of passages of Ipsum"
+              />
+            </div>
           </div>
+
         </section>
 
         {/* Support Section */}
-        <section className="bg-yellow-50 py-16">
+        <section className="bg-yellow-200 py-16">
           <div className="container mx-auto px-4 grid md:grid-cols-2 gap-8 items-center">
             <div>
               <h1 className="text-7xl font-extrabold mb-6">Have a question? Our team is happy to assist you</h1>
