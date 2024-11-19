@@ -22,7 +22,7 @@ import contact from "../public/assets/pexels-picha-stock-3894377 1.jpg"
 
 import Image from "next/image"
 import Link from "next/link"
-import { MapPin, Phone } from "lucide-react"
+import { Phone } from "lucide-react"
 import { Book, CreditCard, Flag } from 'lucide-react'
 
 import { Button } from "@/components/ui/button"

@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { toast, ToastContainer } from 'react-toastify';
-import axios from '../../lib/axios';
+import axios from '../../lib/store/axios';
 
 
   //form values type

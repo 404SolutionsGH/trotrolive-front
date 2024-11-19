@@ -1,10 +1,11 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { authApi, ApiError } from '@/app/lib/api';
+import { authApi, ApiError } from '@/app/features/auth/api';
 import {
   AuthState,
   LoginCredentials,
-  RegisterData
-} from '@/app/types/auth';
+  RegisterData,
+  AuthResponse,
+} from '@/app/features/auth/types';
 
 const initialState: AuthState = {
   user: null,
@@ -14,14 +15,14 @@ const initialState: AuthState = {
 };
 
 export const registerUser = createAsyncThunk(
-  'auth/register',
+  process.env.NEXT_PUBLIC_API_URL + 'api/register/passenger/',
   async (userData: RegisterData, { rejectWithValue }) => {
     try {
       const response = await authApi.register(userData);
 
       if (typeof window !== 'undefined') {
-        localStorage.setItem('access_token', response.tokens.access);
-        localStorage.setItem('refresh_token', response.tokens.refresh);
+        localStorage.setItem('access_token', response.tokens?.access_token || '');
+        localStorage.setItem('refresh_token', response.tokens?.refresh_token || '');
       }
 
       return response.user;
@@ -35,7 +36,7 @@ export const registerUser = createAsyncThunk(
 );
 
 export const loginUser = createAsyncThunk(
-  'auth/login',
+  process.env.NEXT_PUBLIC_API_URL + 'api/login/',
   async (credentials: LoginCredentials, { rejectWithValue }) => {
     try {
       const response = await authApi.login(credentials);
@@ -61,7 +62,7 @@ export const loginUser = createAsyncThunk(
 );
 
 export const logoutUser = createAsyncThunk(
-  'auth/logout',
+  process.env.NEXT_PUBLIC_API_URL + 'api/logout',
   async (_, { rejectWithValue }) => {
     try {
       await authApi.logout();
@@ -90,7 +91,7 @@ const authSlice = createSlice({
       .addCase(registerUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = true;
-        state.user = action.payload;
+        state.user  = action.payload || un;
         state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {

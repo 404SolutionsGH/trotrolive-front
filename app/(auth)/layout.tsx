@@ -1,14 +1,11 @@
 import '../globals.css';
-import { Poppins } from 'next/font/google';
+// import { Poppins } from 'next/font/google';
 
-
-
-const poppins = Poppins({
-    subsets: ['latin'],
-    variable: '--font-poppins',
-    weight: ['300', '400', '500'],
-})
-
+// const poppins = Poppins({
+//     subsets: ['latin'],
+//     variable: '--font-poppins',
+//     weight: ['300', '400', '500'],
+// })
 
 export default function AuthLayout({
     children

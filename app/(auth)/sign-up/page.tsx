@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Eye, EyeOff, Mail, Phone, User, Lock, ArrowRight, Mail as GmailIcon} from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +11,11 @@ import { useFormik } from 'formik';
 import * as yup from 'yup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import axios from '../../lib/axios';
-import { AxiosError } from 'axios';
+// import axios from '../../lib/axios';
+// import { AxiosError } from 'axios';
+import { useDispatch } from 'react-redux';
+import { registerUser } from '../../features/auth/authSlice';
+import { AppDispatch } from '../../lib/store';
 
 //form values type
 interface FormValues {
@@ -22,12 +26,12 @@ interface FormValues {
     password2: string;
 }
 
-interface ErrorResponse {
-  message: string;
-  error?: {
-    [key: string]: string[];
-  }
-}
+// interface ErrorResponse {
+//   message: string;
+//   error?: {
+//     [key: string]: string[];
+//   }
+// }
 
 // Full Name Regex
 const fullNameRegex = /^[A-Za-z]+(?:[-\s'][A-Za-z]+)*$/;
@@ -71,6 +75,8 @@ const schema = yup.object().shape({
 });
 
 export default function SignUp() {
+  const dispatch = useDispatch<AppDispatch>();
+  const router = useRouter();
 
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -97,40 +103,27 @@ export default function SignUp() {
             email: values.email,
             phone_number: formattedPhone,
             password: values.password,
-            password2: values.password2
           };
 
-          const response = await axios.post('/register/passenger/', payload);
-          console.log(response);
+          const resultAction = await dispatch(registerUser(payload));
 
-          toast.success("Registration successful!", {
-            position: "top-center",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-          });
-
-          // Redirect to login or dashboard after successful registration
-          // router.push('/login');
+          if (registerUser.fulfilled.match(resultAction)) {
+            toast.success("Registration successful!", {
+              position: "top-center",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+            });
+            // Redirect to login or dashboard after successful registration
+            router.push('/login');
+          } else if (registerUser.rejected.match(resultAction)) {
+            throw new Error(resultAction.payload as string);
+          }
 
         } catch (error) {
-          const axiosError = error as AxiosError<ErrorResponse>;
-          let errorMsg = "Registration failed. Please try again.";
-
-          // Handle different types of error responses
-          if (axiosError.response?.data) {
-            const errorData = axiosError.response.data;
-            if (typeof errorData.message === 'string') {
-              errorMsg = errorData.message;
-            } else if (errorData.error) {
-              // Combine all error messages
-              errorMsg = Object.values(errorData.error)
-                .flat()
-                .join(', ');
-            }
-          }
+          const errorMsg = error instanceof Error ? error.message : "Registration failed. Please try again.";
 
           toast.error(errorMsg, {
             position: "top-center",
