@@ -6,6 +6,7 @@ import {
   RegisterData,
   AuthResponse,
 } from '@/app/features/auth/types';
+import { getCsrfToken } from '@/app/features/auth/api';
 
 const initialState: AuthState = {
   user: null,
@@ -15,10 +16,12 @@ const initialState: AuthState = {
 };
 
 export const registerUser = createAsyncThunk(
-  process.env.NEXT_PUBLIC_API_URL + 'api/register/passenger/',
+  'auth/registerUser',
   async (userData: RegisterData, { rejectWithValue }) => {
     try {
-      const response = await authApi.register(userData);
+      const csrfToken = await getCsrfToken();  // Retrieve CSRF token from server
+
+      const response = await authApi.register(userData, csrfToken);  // Pass CSRF token to the API
 
       if (typeof window !== 'undefined') {
         localStorage.setItem('access_token', response.tokens?.access_token || '');
@@ -47,7 +50,7 @@ export const loginUser = createAsyncThunk(
 
         const rememberMe = localStorage.getItem('rememberMe');
         if (rememberMe === 'true') {
-          localStorage.setItem('phone_number', credentials.phone_number);
+          localStorage.setItem('email', credentials.email);
         }
       }
 
@@ -91,7 +94,7 @@ const authSlice = createSlice({
       .addCase(registerUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = true;
-        state.user  = action.payload || un;
+        state.user  = action.payload;
         state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {

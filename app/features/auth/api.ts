@@ -36,34 +36,58 @@ export const authApi = {
     }
   },
 
-  register: async (userData: RegisterData): Promise<AuthResponse> => {
+
+  register: async (userData: RegisterData, csrfToken: string): Promise<AuthResponse> => {
     try {
-      const { data } = await axios.post<AuthResponse>(
+
+      const payload = {
+        user: {
+          full_name: userData.full_name.trim(),
+          email: userData.email.trim().toLowerCase(),
+          phone: userData.phone,
+          password: userData.password
+        }
+      };
+
+      console.log('Registration payload:', payload);
+
+      const response = await axios.post<AuthResponse>(
         `${process.env.NEXT_PUBLIC_API_URL}/api/register/passenger/`,
-        userData,
+        payload, // Send the nested structure
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'Accept': 'application/json',
           },
           withCredentials: true,
         }
       );
-      // const responseHtml = JSON.stringify(data);
-      // document.open();
-      // document.write(responseHtml);
-      // document.close();
-      console.log(data);
-      return data;
+
+      console.log('Registration response:', response.data);
+      return response.data;
+
     } catch (error) {
       if (error instanceof AxiosError) {
-        const message = error.response?.data?.message || 'Registration failed';
+        console.error('Registration error details:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          headers: error.response?.headers,
+        });
+
+        // Extract error message from various possible formats
+        const errorMessage = error.response?.data?.message ||
+                           error.response?.data?.detail ||
+                           error.response?.data?.error ||
+                           Object.values(error.response?.data || {})[0] ||
+                           'Registration failed';
+
         throw new ApiError(
           error.response?.status || 500,
-          message,
-          error.response?.data?.errors
+          typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage)
         );
       }
-      throw new ApiError(500, 'An unexpected error occurred');
+      throw new ApiError(500, 'An unexpected error occurred during registration');
     }
   },
 
@@ -71,7 +95,7 @@ export const authApi = {
     try {
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/logout/`,
-        {},
+        null,
         {
           withCredentials: true,
         }
@@ -86,3 +110,16 @@ export const authApi = {
     }
   },
 };
+
+// function getCsrfToken() {
+//   const csrfCookie = document.cookie.split('; ').find(row => row.startsWith('csrftoken='));
+//   return csrfCookie ? csrfCookie.split('=')[1] : '';
+// }
+
+
+export async function getCsrfToken() {
+  const response = await axios.get('api/get-csrf-token/'); // Request CSRF token from backend
+  const csrfToken = response.data.csrfToken;
+  console.log('CSRF Token from server:', csrfToken);
+  return csrfToken;
+}

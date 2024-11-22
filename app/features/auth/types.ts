@@ -5,14 +5,14 @@ export interface User {
 }
 
 export interface LoginCredentials {
-    phone_number: string;
+    email: string;
     password: string;
 }
 
 export interface RegisterData {
     full_name: string;
     email: string;
-    phone_number: string;
+    phone: string;
     password: string;
 }
 
@@ -25,15 +25,17 @@ export interface RegisterData {
 // }
 
 export interface AuthResponse {
-    tokens?: {
-        access_token: string;
-        refresh_token: string;
-    };
-    user?: {
+    user: {
       id: string;
+      full_name: string;
       email: string;
+      phone_number: string;
     };
-}
+    tokens: {
+      access_token: string;
+      refresh_token: string;
+    };
+  }
 
 export interface AuthState {
     user: User | null;

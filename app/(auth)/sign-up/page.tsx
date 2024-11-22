@@ -16,15 +16,16 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useDispatch } from 'react-redux';
 import { registerUser } from '../../features/auth/authSlice';
 import { AppDispatch } from '../../lib/store';
+import { RegisterData } from '../../features/auth/types';
 
 //form values type
-interface FormValues {
-    full_name: string;
-    email: string;
-    phone_number: string;
-    password: string;
-    password2: string;
-}
+// interface FormValues {
+//     full_name: string;
+//     email: string;
+//     phone_number: string;
+//     password: string;
+//     password2: string;
+// }
 
 // interface ErrorResponse {
 //   message: string;
@@ -53,7 +54,7 @@ const schema = yup.object().shape({
         .required("Email is required")
         .email("Invalid email format"),
 
-    phone_number: yup
+    phone: yup
         .string()
         .required("Phone number is required")
         .matches(phoneRegex, 'Phone number must be numeric')
@@ -82,29 +83,29 @@ export default function SignUp() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [errorVisibility, setErrorVisibility] = useState<{ [key: string]: boolean }>({});
 
-    const formik = useFormik<FormValues>({
+    const formik = useFormik<RegisterData>({
       initialValues: {
         full_name: '',
         email: '',
-        phone_number: '',
+        phone: '',
         password: '',
-        password2: ''
       },
       validationSchema: schema,
       onSubmit: async (values) => {
         try {
           // Format phone number to include country code if needed
-          const formattedPhone = values.phone_number.startsWith('0')
-            ? '233' + values.phone_number.slice(1)
-            : values.phone_number;
-
+          let formattedPhone = values.phone;
+          if (formattedPhone.startsWith('0')) {
+              formattedPhone = '233' + formattedPhone.slice(1);
+          }
           const payload = {
-            full_name: values.full_name,
-            email: values.email,
-            phone_number: formattedPhone,
+            full_name: values.full_name.trim(),
+            email: values.email.trim().toLowerCase(),
+            phone: formattedPhone,
             password: values.password,
           };
 
+          console.log('Submitting Registration payload:', payload);
           const resultAction = await dispatch(registerUser(payload));
 
           if (registerUser.fulfilled.match(resultAction)) {
@@ -141,7 +142,7 @@ export default function SignUp() {
       const timers: { [key: string]: NodeJS.Timeout } = {};
 
       Object.keys(formik.errors).forEach((field) => {
-        if (formik.touched[field as keyof FormValues] && formik.errors[field as keyof FormValues]) {
+        if (formik.touched[field as keyof RegisterData] && formik.errors[field as keyof RegisterData]) {
           setErrorVisibility((prev) => ({ ...prev, [field]: true }));
           timers[field] = setTimeout(() => {
             setErrorVisibility((prev) => ({ ...prev, [field]: false }));
@@ -191,7 +192,7 @@ export default function SignUp() {
                   <div className="absolute inset-y-0 left-3 flex items-center">
                     <User className="h-4 w-4 text-gray-500" />
                   </div>
-                  <Input id="full_name" placeholder="Name" className="pl-10"
+                  <Input id="full_name" name="full_name" placeholder="Name" className="pl-10"
                   value={formik.values.full_name}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}/>
@@ -209,7 +210,7 @@ export default function SignUp() {
                   <div className="absolute inset-y-0 left-3 flex items-center">
                     <Mail className="h-4 w-4 text-gray-500" />
                   </div>
-                  <Input id="email" type="email" placeholder="Email" className="pl-10"
+                  <Input id="email" name="email" type="email" placeholder="Email" className="pl-10"
                   value={formik.values.email}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}/>
@@ -232,13 +233,13 @@ export default function SignUp() {
                     className="w-20 pl-10 rounded-r-none border-r-0"
                     defaultValue="233"
                   />
-                  <Input id="phone_number" placeholder="Phone Number" className="flex-1 rounded-l-none"
-                  value={formik.values.phone_number}
+                  <Input id="phone" name="phone" placeholder="Phone Number" className="flex-1 rounded-l-none"
+                  value={formik.values.phone}
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}/>
                 </div>
-                {formik.touched.phone_number && formik.errors.phone_number && errorVisibility.phone_number && (
-                    <div className="text-red-500 text-sm">{formik.errors.phone_number}</div>
+                {formik.touched.phone && formik.errors.phone && errorVisibility.phone && (
+                    <div className="text-red-500 text-sm">{formik.errors.phone}</div>
                   )}
               </div>
 
@@ -252,6 +253,7 @@ export default function SignUp() {
                   </div>
                   <Input
                     id="password"
+                    name="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Password"
                     className="pl-10 pr-10"
@@ -292,7 +294,7 @@ export default function SignUp() {
                     type={showConfirmPassword ? "text" : "password"}
                     placeholder="Confirm Password"
                     className="pl-10 pr-10"
-                    value={formik.values.password2}
+                    // value={formik.values.password2}
                     onChange={formik.handleChange}
                     onBlur={formik.handleBlur}
                   />
@@ -310,9 +312,9 @@ export default function SignUp() {
                     )}
                   </Button>
                 </div>
-                {formik.touched.password2 && formik.errors.password2 && (
+                {/* {formik.touched.password2 && formik.errors.password2 && (
                   <div className="text-red-500 text-sm">{formik.errors.password2}</div>
-                )}
+                )} */}
               </div>
 
               <Button type="submit" className="w-full bg-purple-700 hover:bg-purple-800">
