@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from 'next/navigation'; // Add this import
 import { ArrowLeft, Lock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -11,21 +12,19 @@ import { Label } from "@/components/ui/label";
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
+import 'react-toastify/dist/ReactToastify.css';
 import { toast, ToastContainer } from 'react-toastify';
 import gen from "../../../public/assets/generated.jpg";
-
-type FormValues = {
-  phone_number: string;
-  password: string;
-  rememberMe?: boolean;
-};
+import { loginUser } from '@/app/features/auth/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/app/lib/store';
+import { LoginCredentials } from '@/app/features/auth/types';
 
 const schema = yup.object().shape({
-  phone_number: yup
+  email: yup
     .string()
-    .required("Phone number is required")
-    .matches(/^[0-9]+$/, "Phone number must be numeric")
-    .length(10, "Phone number must be exactly 10 characters long"),
+    .required("Email is required")
+    .email("Invalid email address"),
   password: yup
     .string()
     .required("Password is required")
@@ -34,40 +33,57 @@ const schema = yup.object().shape({
 });
 
 export default function Login() {
-  // const [rememberMe, setRememberMe] = useState(false);
-  const [storedPhoneNumber, setStoredPhoneNumber] = useState<string>("");
+  const router = useRouter();
+  const dispatch = useDispatch<AppDispatch>();
+  const { isLoading } = useSelector((state: RootState) => state.auth);
+
+  const [rememberMe, setRememberMe] = useState(false);
+  const [storedEmail, setStoredEmail] = useState<string>("");
   const [errorVisibility, setErrorVisibility] = useState<{ [key: string]: boolean }>({});
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isSubmitSuccessful, isSubmitting },
-  } = useForm<FormValues>({
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginCredentials>({
     resolver: yupResolver(schema),
     criteriaMode: "all",
     defaultValues: {
-      phone_number: "",
+      email: "",
       password: "",
-      rememberMe: false,
     },
   });
 
-  const onSubmit = (data: FormValues) => {
-    if (data.rememberMe) {
-      localStorage.setItem("rememberMe", "true");
-      localStorage.setItem("phone_number", data.phone_number);
-    } else {
-      localStorage.removeItem("rememberMe");
-      localStorage.removeItem("phone_number");
-    }
+  const onSubmit = async (data: LoginCredentials) => {
+    try {
+      // Handle Remember Me
+      if (rememberMe) {
+        localStorage.setItem("rememberMe", "true");
+        localStorage.setItem("email", data.email);
+      } else {
+        localStorage.removeItem("rememberMe");
+        localStorage.removeItem("email");
+      }
 
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(console.log("Form Data: ", data));
-        toast.success("Form submitted successfully!");
-      }, 2000);
-    });
+      // Dispatch login action
+      const resultAction = await dispatch(
+        loginUser({ email: data.email, password: data.password })
+      );
+
+      if (loginUser.fulfilled.match(resultAction)) {
+        toast.success("Login successful!");
+        router.push("/admin");
+        reset();
+      } else {
+        const error = resultAction.payload as { message: string };
+        toast.error(error.message || "Invalid credentials");
+      }
+    } catch (error) {
+      console.error("Error logging in:", error);
+      toast.error("An unexpected error occurred. Please try again.");
+    }
   };
 
   useEffect(() => {
@@ -87,21 +103,14 @@ export default function Login() {
 
   useEffect(() => {
     const rememberMeValue = localStorage.getItem("rememberMe");
-    const userPhoneNumber = localStorage.getItem("phone_number");
+    const userEmail = localStorage.getItem("email");
 
-    if (rememberMeValue === "true") {
-      // setRememberMe(true);
-      setStoredPhoneNumber(userPhoneNumber || "");
+    if (rememberMeValue === "true" && userEmail) {
+      setRememberMe(true);
+      setStoredEmail(userEmail);
+      setValue("email", userEmail); // Set the email in the form
     }
-
-    if (isSubmitSuccessful) {
-      reset({
-        phone_number: "",
-        password: "",
-        rememberMe: false,
-      });
-    }
-  }, [isSubmitSuccessful, reset]);
+  }, [setValue]);
 
   return (
     <div className="min-h-screen w-full bg-white">
@@ -133,17 +142,15 @@ export default function Login() {
               <div className="flex items-center space-x-2">
                 <User className="h-5 w-5 text-muted-foreground" />
                 <Input
-                  {...register("phone_number")}
+                  {...register("email")}
                   className="flex-1"
-                  placeholder="Phone number"
-                  type="text"
-                  defaultValue={storedPhoneNumber}
+                  placeholder="Email address"
+                  type="email"
+                  defaultValue={storedEmail}
                 />
               </div>
-              {errors.phone_number && errorVisibility.phone_number && (
-                <p className="text-sm text-red-500">
-                  {errors.phone_number.message}
-                </p>
+              {errors.email && errorVisibility.email && (
+                <p className="text-sm text-red-500">{errors.email.message}</p>
               )}
 
               <div className="flex items-center space-x-2">
@@ -160,11 +167,11 @@ export default function Login() {
               )}
 
               <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2">
                   <Checkbox
                     id="remember"
-                    {...register("rememberMe")}
-                    defaultChecked={storedPhoneNumber ? true : false} // Control checkbox state
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(checked as boolean)}
                   />
                   <Label htmlFor="remember" className="text-sm text-gray-600">
                     Remember me
@@ -181,9 +188,9 @@ export default function Login() {
               <Button
                 type="submit"
                 className="w-full bg-purple-700 hover:bg-purple-800"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isLoading}
               >
-                {isSubmitting ? "Logging in..." : "Log In"}
+                {isSubmitting || isLoading ? "Logging in..." : "Log In"}
               </Button>
             </form>
 

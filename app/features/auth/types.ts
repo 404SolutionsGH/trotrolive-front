@@ -26,14 +26,12 @@ export interface RegisterData {
 
 export interface AuthResponse {
     user: {
-      id: string;
       full_name: string;
       email: string;
-      phone_number: string;
     };
     tokens: {
-      access_token: string;
-      refresh_token: string;
+      access: string;
+      refresh: string;
     };
   }
 

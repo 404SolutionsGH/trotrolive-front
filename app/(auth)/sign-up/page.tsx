@@ -125,7 +125,7 @@ export default function SignUp() {
 
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : "Registration failed. Please try again.";
-
+          console.log("Error:", error)
           toast.error(errorMsg, {
             position: "top-center",
             autoClose: 5000,

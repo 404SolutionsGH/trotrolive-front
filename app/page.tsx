@@ -27,6 +27,7 @@ import { Book, CreditCard, Flag } from 'lucide-react'
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { useEffect, useState } from "react";
 // import { Card, CardContent } from "@/components/ui/card"
 
 interface FeatureItemProps {
@@ -46,6 +47,46 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ icon, title, description }) =
 )
 
 export default function Home() {
+
+  const [location, setLocation] = useState("");
+  const [isLocationEditable, setIsLocationEditable] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setError("Geolocation is not supported by your browser.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+          );
+          const data = await response.json();
+          setLocation(data.display_name || "Location not found");
+        } catch (err) {
+          console.error("Error fetching location:", err);
+          setError("Failed to fetch location address.");
+        }
+      },
+      (positionError) => {
+        setError(positionError.message || "Could not retrieve location.");
+      }
+    );
+  }, []);
+
+  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocation(e.target.value);
+  };
+
+  const toggleLocationEdit = () => {
+    setIsLocationEditable(!isLocationEditable);
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* Header */}
@@ -68,9 +109,11 @@ export default function Home() {
               Contact us
             </Link>
           </nav>
-          <Button variant="secondary" className="bg-pink-100 text-pink-800 hover:bg-pink-200">
-            Sign Up
-          </Button>
+          <Link href="/sign-up">
+            <Button variant="secondary" className="bg-pink-100 text-pink-800 hover:bg-pink-200">
+              Sign Up
+            </Button>
+          </Link>
         </div>
       </header>
 
@@ -89,7 +132,31 @@ export default function Home() {
               Wondering the cost of transportation from anywhere to anywhere?
             </h3>
             <div className="space-y-4">
-              <Input placeholder="Enter pickup location" />
+              <div className="flex items-center space-x-2">
+                {isLocationEditable ? (
+                  <Input
+                    placeholder="Enter pickup location"
+                    value={location}
+                    onChange={handleLocationChange}
+                    className="flex-1"
+                  />
+                ) : (
+                  <Input
+                    placeholder="Enter pickup location"
+                    value={location}
+                    readOnly
+                    className="flex-1 cursor-not-allowed"
+                  />
+                )}
+                <Button
+                  variant="outline"
+                  onClick={toggleLocationEdit}
+                  className="px-3"
+                >
+                  {isLocationEditable ? "Save" : "Edit"}
+                </Button>
+              </div>
+              {error && <p className="text-red-500 text-sm">{error}</p>}
               <Input placeholder="Enter destination" />
               <Button className="w-full bg-pink-500 hover:bg-pink-600">Check Now</Button>
             </div>

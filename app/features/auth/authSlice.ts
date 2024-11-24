@@ -39,27 +39,42 @@ export const registerUser = createAsyncThunk(
 );
 
 export const loginUser = createAsyncThunk(
-  process.env.NEXT_PUBLIC_API_URL + 'api/login/',
+  'auth/login',
   async (credentials: LoginCredentials, { rejectWithValue }) => {
     try {
       const response = await authApi.login(credentials);
+      console.log("Login response: ", response);
 
+      // Updated to match backend response structure
+      if (!response?.access) {
+        throw new Error('Invalid response format from server');
+      }
+
+      // Store tokens in localStorage
       if (typeof window !== 'undefined') {
-        localStorage.setItem('access_token', response.tokens.access);
-        localStorage.setItem('refresh_token', response.tokens.refresh);
-
-        const rememberMe = localStorage.getItem('rememberMe');
-        if (rememberMe === 'true') {
-          localStorage.setItem('email', credentials.email);
+        localStorage.setItem('access_token', response.access);
+        if (response.refresh) {
+          localStorage.setItem('refresh_token', response.refresh);
         }
       }
 
+      // Return the user data
       return response.user;
     } catch (error) {
+      console.error('Login error:', error);
+
       if (error instanceof ApiError) {
-        return rejectWithValue(error.message);
+        return rejectWithValue({
+          message: error.message,
+          status: error.status,
+          errors: error.errors,
+        });
       }
-      return rejectWithValue('Login failed. Please check your credentials.');
+
+      return rejectWithValue({
+        message: 'Login failed. Please check your credentials and try again.',
+        status: 500,
+      });
     }
   }
 );
