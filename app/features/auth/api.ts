@@ -9,21 +9,8 @@ export class ApiError extends Error {
   }
 }
 
-
-
 export const authApi = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    // try {
-    //   const { data } = await axiosInstance.post('/accounts/api/login/', LoginCredentials);
-    //   // Save tokens to localStorage
-    //   localStorage.setItem('access_token', data.access);
-    //   localStorage.setItem('refresh_token', data.refresh);
-    //   return data;
-    // } catch (error) {
-    //   console.error('Login failed:', error.response?.data || error.message);
-    //   throw error;
-    // }
-
     try {
       // Make sure to remove any stale tokens before login
       localStorage.removeItem('access_token');
@@ -136,24 +123,24 @@ export const authApi = {
     }
   },
 
-//   logout: async (): Promise<void> => {
-//     try {
-//       await axios.post(
-//         `${process.env.NEXT_PUBLIC_API_URL}/api/logout/`,
-//         null,
-//         {
-//           withCredentials: true,
-//         }
-//       );
-//     } catch (error) {
-//       console.error('Logout failed:', error);
-//     } finally {
-//       if (typeof window !== 'undefined') {
-//         localStorage.removeItem('access_token');
-//         localStorage.removeItem('refresh_token');
-//       }
-//     }
-//   },
+  logout: async (): Promise<void> => {
+    try {
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/logout/`,
+        null,
+        {
+          withCredentials: true,
+        }
+      );
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+      }
+    }
+  },
 };
 
 export const refreshAccessToken = async (): Promise<string | null> => {

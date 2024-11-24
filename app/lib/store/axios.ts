@@ -1,4 +1,4 @@
-import Cookies from 'js-cookie';
+// import Cookies from 'js-cookie';
 import axios from 'axios';
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -14,18 +14,8 @@ export const axiosInstance = axios.create({
 });
 
 
-// axiosInstance.interceptors.request.use((config) => {
-//   const csrfToken = Cookies.get('csrftoken');
-//   if (csrfToken) {
-//     config.headers['X-CSRFToken'] = csrfToken;
-//   }
-//   return config;
-// });
-
-// Modified interceptor to skip adding token for login endpoint
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Don't add token for login request
     if (config.url?.includes('/login/')) {
       return config;
     }

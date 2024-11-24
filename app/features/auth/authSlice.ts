@@ -24,8 +24,8 @@ export const registerUser = createAsyncThunk(
       const response = await authApi.register(userData, csrfToken);  // Pass CSRF token to the API
 
       if (typeof window !== 'undefined') {
-        localStorage.setItem('access_token', response.tokens?.access_token || '');
-        localStorage.setItem('refresh_token', response.tokens?.refresh_token || '');
+        localStorage.setItem('access', response.tokens?.access || '');
+        localStorage.setItem('refresh', response.tokens?.refresh || '');
       }
 
       return response.user;
@@ -46,15 +46,15 @@ export const loginUser = createAsyncThunk(
       console.log("Login response: ", response);
 
       // Updated to match backend response structure
-      if (!response?.access) {
+      if (!response?.tokens.access) {
         throw new Error('Invalid response format from server');
       }
 
       // Store tokens in localStorage
       if (typeof window !== 'undefined') {
-        localStorage.setItem('access_token', response.access);
-        if (response.refresh) {
-          localStorage.setItem('refresh_token', response.refresh);
+        localStorage.setItem('access_token', response.tokens.access);
+        if (response.tokens.refresh) {
+          localStorage.setItem('refresh_token', response.tokens.refresh);
         }
       }
 
