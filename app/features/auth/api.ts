@@ -13,10 +13,18 @@ export const authApi = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     try {
       // Make sure to remove any stale tokens before login
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
 
-      const response = await axiosInstance.post('/accounts/api/login/', credentials);
+      const response = await axiosInstance.post('/accounts/api/login/', credentials, {
+        withCredentials: true,  // Ensure cookies are included with this specific request
+        headers: {
+          'Accept': 'application/json',
+          // 'X-XSRF-TOKEN': getCookie('csrftoken'),  // If using CSRF protection
+        }
+      });
+
+      // localStorage.setItem('access_token', response.data.tokens.access);
+      // localStorage.setItem('refresh_token', response.data.tokens.refresh);
+
       console.log('Login API response:', response.data);
       return response.data;
     } catch (error) {

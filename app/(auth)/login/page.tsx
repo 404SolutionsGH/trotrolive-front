@@ -19,6 +19,7 @@ import { loginUser } from '@/app/features/auth/authSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/app/lib/store';
 import { LoginCredentials } from '@/app/features/auth/types';
+import { Eye, EyeOff } from 'lucide-react';
 
 const schema = yup.object().shape({
   email: yup
@@ -40,6 +41,7 @@ export default function Login() {
   const [rememberMe, setRememberMe] = useState(false);
   const [storedEmail, setStoredEmail] = useState<string>("");
   const [errorVisibility, setErrorVisibility] = useState<{ [key: string]: boolean }>({});
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register,
@@ -58,7 +60,6 @@ export default function Login() {
 
   const onSubmit = async (data: LoginCredentials) => {
     try {
-      // Handle Remember Me
       if (rememberMe) {
         localStorage.setItem("rememberMe", "true");
         localStorage.setItem("email", data.email);
@@ -67,20 +68,24 @@ export default function Login() {
         localStorage.removeItem("email");
       }
 
-      // Dispatch login action
       const resultAction = await dispatch(
         loginUser({ email: data.email, password: data.password })
       );
 
       if (loginUser.fulfilled.match(resultAction)) {
         toast.success("Login successful!");
-        setTimeout(() => {
-          router.push("/admin");
-        }, 100);
-        // reset();
+
+        // Ensure token is saved and accessible
+        const token = resultAction.payload?.token;
+        if (token) {
+          console.log("Token saved:", token);
+        }
+
+        // Redirect to admin dashboard
+        await router.replace('/admin');
       } else {
-        const error = resultAction.payload as { message: string };
-        toast.error(error.message || "Invalid credentials");
+        const error = resultAction.payload as { message?: string };
+        toast.error(error?.message || "Invalid credentials");
       }
     } catch (error) {
       console.error("Error logging in:", error);
@@ -161,8 +166,22 @@ export default function Login() {
                   {...register("password")}
                   className="flex-1"
                   placeholder="Password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                 />
+                <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute inset-y-0 right-0 px-3 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-gray-500" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-gray-500" />
+                    )}
+                    <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
+                  </Button>
               </div>
               {errors.password && errorVisibility.password && (
                 <p className="text-sm text-red-500">{errors.password.message}</p>

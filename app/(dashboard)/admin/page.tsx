@@ -5,8 +5,19 @@ import { CreditCard, MapPin, Send } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { checkAuth } from '@/app/features/auth/authSlice';
+
 
 export default function Admin() {
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(checkAuth());
+  }, [dispatch]);
+
   return (
     <main className="p-6">
       <h2 className="mb-6 text-2xl font-semibold text-[#B4257A]">Dashboard</h2>

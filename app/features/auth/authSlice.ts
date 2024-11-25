@@ -7,6 +7,7 @@ import {
   AuthResponse,
 } from '@/app/features/auth/types';
 import { getCsrfToken } from '@/app/features/auth/api';
+import Cookies from 'js-cookie';
 
 const initialState: AuthState = {
   user: null,
@@ -15,17 +16,42 @@ const initialState: AuthState = {
   error: null,
 };
 
+// Cookie configuration
+const cookieOptions = {
+  expires: 7, // 7 days
+  secure: process.env.NODE_ENV === 'development',
+  sameSite: 'lax' as 'lax',
+  path: '/'
+};
+
+// Helper functions for token management
+const setAuthTokens = (tokens: { access?: string; refresh?: string }) => {
+  if (tokens.access) {
+    Cookies.set('access_token', tokens.access, cookieOptions);
+  }
+  if (tokens.refresh) {
+    Cookies.set('refresh_token', tokens.refresh, cookieOptions);
+  }
+};
+
+const removeAuthTokens = () => {
+  Cookies.remove('access_token', { path: '/' });
+  Cookies.remove('refresh_token', { path: '/' });
+};
+
 export const registerUser = createAsyncThunk(
   'auth/registerUser',
   async (userData: RegisterData, { rejectWithValue }) => {
     try {
-      const csrfToken = await getCsrfToken();  // Retrieve CSRF token from server
+      const csrfToken = await getCsrfToken();
 
-      const response = await authApi.register(userData, csrfToken);  // Pass CSRF token to the API
+      const response = await authApi.register(userData, csrfToken);
 
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('access', response.tokens?.access || '');
-        localStorage.setItem('refresh', response.tokens?.refresh || '');
+      if (response.tokens?.access) {
+        setAuthTokens({
+          access: response.tokens.access,
+          refresh: response.tokens.refresh
+        });
       }
 
       return response.user;
@@ -45,21 +71,22 @@ export const loginUser = createAsyncThunk(
       const response = await authApi.login(credentials);
       console.log("Login response: ", response);
 
-      // Updated to match backend response structure
       if (!response?.tokens.access) {
         throw new Error('Invalid response format from server');
       }
 
-      // Store tokens in localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('access_token', response.tokens?.access);
-        if (response.tokens.refresh) {
-          localStorage.setItem('refresh_token', response.tokens?.refresh);
-        }
-        localStorage.setItem('user', JSON.stringify(response.user));
+      // Store tokens in cookies
+      setAuthTokens({
+        access: response.tokens.access,
+        refresh: response.tokens.refresh
+      });
+
+      // Store non-sensitive user data in localStorage if needed
+      if (typeof window !== 'undefined' && credentials.rememberMe) {
+        localStorage.setItem('rememberMe', 'true');
+        localStorage.setItem('email', credentials.email);
       }
 
-      // Return the user data
       return response.user;
     } catch (error) {
       console.error('Login error:', error);
@@ -81,14 +108,49 @@ export const loginUser = createAsyncThunk(
 );
 
 export const logoutUser = createAsyncThunk(
-  process.env.NEXT_PUBLIC_API_URL + 'api/logout',
+  'auth/logout',
   async (_, { rejectWithValue }) => {
     try {
       await authApi.logout();
+
+      // Clear all auth-related cookies and storage
+      removeAuthTokens();
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('rememberMe');
+        localStorage.removeItem('email');
+      }
+
       return null;
     } catch (error) {
+      console.error("Logout error: ", error);
       return rejectWithValue('Logout failed');
-      console.log("Error: ", error);
+    }
+  }
+);
+
+// Add token refresh functionality
+export const refreshToken = createAsyncThunk(
+  'auth/refreshToken',
+  async (_, { rejectWithValue }) => {
+    try {
+      const refreshToken = Cookies.get('refresh_token');
+
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+
+      const response = await authApi.refreshToken(refreshToken);
+
+      if (response.access) {
+        Cookies.set('access_token', response.access, cookieOptions);
+      }
+
+      return response;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        return rejectWithValue(error.message);
+      }
+      return rejectWithValue('Token refresh failed');
     }
   }
 );
@@ -100,6 +162,10 @@ const authSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    checkAuth: (state) => {
+      const accessToken = Cookies.get('access_token');
+      state.isAuthenticated = !!accessToken;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -110,7 +176,7 @@ const authSlice = createSlice({
       .addCase(registerUser.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isAuthenticated = true;
-        state.user  = action.payload;
+        state.user = action.payload;
         state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {
@@ -137,16 +203,17 @@ const authSlice = createSlice({
         state.user = null;
         state.isAuthenticated = false;
         state.error = null;
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-          localStorage.removeItem('rememberMe');
-          localStorage.removeItem('email');
-          localStorage.removeItem('full_name');
-        }
+      })
+      .addCase(refreshToken.fulfilled, (state) => {
+        state.isAuthenticated = true;
+        state.error = null;
+      })
+      .addCase(refreshToken.rejected, (state) => {
+        state.isAuthenticated = false;
+        state.user = null;
       });
   },
 });
 
-export const { clearError } = authSlice.actions;
+export const { clearError, checkAuth } = authSlice.actions;
 export default authSlice.reducer;
