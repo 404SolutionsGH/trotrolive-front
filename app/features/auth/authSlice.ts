@@ -52,10 +52,11 @@ export const loginUser = createAsyncThunk(
 
       // Store tokens in localStorage
       if (typeof window !== 'undefined') {
-        localStorage.setItem('access_token', response.tokens.access);
+        localStorage.setItem('access_token', response.tokens?.access);
         if (response.tokens.refresh) {
-          localStorage.setItem('refresh_token', response.tokens.refresh);
+          localStorage.setItem('refresh_token', response.tokens?.refresh);
         }
+        localStorage.setItem('user', JSON.stringify(response.user));
       }
 
       // Return the user data
@@ -140,7 +141,8 @@ const authSlice = createSlice({
           localStorage.removeItem('access_token');
           localStorage.removeItem('refresh_token');
           localStorage.removeItem('rememberMe');
-          localStorage.removeItem('phone_number');
+          localStorage.removeItem('email');
+          localStorage.removeItem('full_name');
         }
       });
   },

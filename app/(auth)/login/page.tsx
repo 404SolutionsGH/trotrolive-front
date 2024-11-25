@@ -74,8 +74,10 @@ export default function Login() {
 
       if (loginUser.fulfilled.match(resultAction)) {
         toast.success("Login successful!");
-        router.push("/admin");
-        reset();
+        setTimeout(() => {
+          router.push("/admin");
+        }, 100);
+        // reset();
       } else {
         const error = resultAction.payload as { message: string };
         toast.error(error.message || "Invalid credentials");

@@ -11,13 +11,13 @@ import phone from "../public/assets/phone.svg";
 import playStore from "../public/assets/Google play.svg";
 import appStore from "../public/assets/AppStore.svg";
 import hero from "../public/assets/home-hero.svg";
-import contact from "../public/assets/pexels-picha-stock-3894377 1.jpg"
+// import contact from "../public/assets/pexels-picha-stock-3894377 1.jpg"
 // import book from "../public/assets/book.svg";
 // import card from "../public/assets/card.svg";
 // import flag from "../public/assets/flag.svg";
 // import Navbar from '@/components/navbar';
 // import Footer from '@/components/footer';
-
+import Support from "@/components/support";
 
 
 import Image from "next/image"
@@ -184,7 +184,7 @@ export default function Home() {
         </section>
 
         {/* App Promotion */}
-        <section className="bg-gradient-to-r from-pink-50 via-yellow-50 to-yellow-100 py-16">
+        <section className="bg-gradient-to-r from-yellow-50 via-pink-50 to-pink-100 py-16">
           <div className="container mx-auto px-4 grid md:grid-cols-2 gap-8 items-center">
             <Image
               src={phone}
@@ -248,33 +248,8 @@ export default function Home() {
         </section>
 
         {/* Support Section */}
-        <section className="bg-yellow-200 py-16">
-          <div className="container mx-auto px-4 grid md:grid-cols-2 gap-8 items-center">
-            <div>
-              <h1 className="text-7xl font-extrabold mb-6">Have a question? Our team is happy to assist you</h1>
-              <p className="text-gray-600 mb-6 py-10">
-                Ask about Trotro.ai product, implementation or anything else. Our highly trained reps are standing by, ready to help.
-              </p>
-              <hr className="border-black mb-8"/>
-              <div className="flex gap-4 items-center py-5">
-                <Button className="bg-pink-500 hover:bg-pink-600">Contact Us</Button>
-                <div className="flex items-center gap-2">
-                  <span>or call</span>
-                  <Link href="tel:0556516391" className="text-pink-500 font-semibold underline">
-                    0556 516 391
-                  </Link>
-                </div>
-              </div>
-            </div>
-            <Image
-              src={contact}
-              alt="Customer support representative"
-              width={450}
-              height={300}
-              className="rounded-lg justify-center mx-auto"
-            />
-          </div>
-        </section>
+        <Support />
+
       </main>
 
       {/* Footer */}
