@@ -22,7 +22,8 @@ export const authApi = {
         }
       });
 
-      // localStorage.setItem('access_token', response.data.tokens.access);
+      const user = localStorage.setItem('user', JSON.stringify(response.data.user));
+      console.log("User Details: ", user);
       // localStorage.setItem('refresh_token', response.data.tokens.refresh);
 
       console.log('Login API response:', response.data);
@@ -132,14 +133,15 @@ export const authApi = {
   },
 
   logout: async (): Promise<void> => {
+    const csrfToken = getCsrfToken();
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/logout/`,
-        null,
-        {
-          withCredentials: true,
+      const response = await axiosInstance.post('/accounts/api/logout/', {}, {
+        withCredentials: true,
+        headers: {
+            'X-CSRFToken': csrfToken,  // Include CSRF token in headers
         }
-      );
+    });
+    console.log('Logout successful', response.data);
     } catch (error) {
       console.error('Logout failed:', error);
     } finally {

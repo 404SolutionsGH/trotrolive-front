@@ -5,10 +5,16 @@ export async function middleware(req) {
 
   const { pathname } = req.nextUrl;
 
+  const accessToken = req.cookies.get('access_token')?.value;
+
+  if (pathname === '/login' && accessToken) {
+    console.log('Authenticated user trying to access login. Redirecting to home.');
+    return NextResponse.redirect(new URL('/admin', req.url)); // Redirect to home or dashboard
+  }
+
   if (pathname.startsWith('/admin')) {
     console.log('Admin route detected');
 
-    const accessToken = req.cookies.get('access_token')?.value;
     const refreshToken = req.cookies.get('refresh_token')?.value;
 
     console.log('Access token from cookies:', accessToken);
@@ -16,9 +22,7 @@ export async function middleware(req) {
 
     if (!accessToken) {
       console.log('No access token found, redirecting to login');
-      const url = new URL('/login', req.url);
-      url.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(url);
+      return redirectToLogin(req, pathname);
     }
 
     try {
@@ -34,7 +38,12 @@ export async function middleware(req) {
 
       if (response.ok) {
         console.log('Token is valid, proceeding to admin');
-        return NextResponse.next();
+        const nextResponse = NextResponse.next();
+
+        // Add cache control headers
+        addCacheControlHeaders(nextResponse);
+
+        return nextResponse;
       }
 
       console.log('Token invalid, attempting refresh');
@@ -57,6 +66,9 @@ export async function middleware(req) {
             path: '/',
           });
 
+          // Add cache control headers
+          addCacheControlHeaders(refreshedResponse);
+
           console.log('Token refreshed, proceeding to admin');
           return refreshedResponse;
         } else {
@@ -65,20 +77,31 @@ export async function middleware(req) {
       }
 
       console.log('No valid tokens, redirecting to login');
-      const url = new URL('/login', req.url);
-      url.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(url);
+      return redirectToLogin(req, pathname);
     } catch (error) {
       console.error('Error during token verification:', error);
-      const url = new URL('/login', req.url);
-      url.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(url);
+      return redirectToLogin(req, pathname);
     }
   }
 
-  return NextResponse.next();
+  // For non-admin routes, still add cache control headers
+  const response = NextResponse.next();
+  addCacheControlHeaders(response);
+  return response;
+}
+
+function addCacheControlHeaders(response) {
+  response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  response.headers.set('Pragma', 'no-cache');
+  response.headers.set('Expires', '0');
+}
+
+function redirectToLogin(req, pathname) {
+  const url = new URL('/login', req.url);
+  url.searchParams.set('redirect', pathname);
+  return NextResponse.redirect(url);
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/admin'],
+  matcher: ['/admin/:path*', '/admin', '/login'], // Ensure login page is included in middleware matching
 };

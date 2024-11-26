@@ -20,6 +20,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/app/lib/store';
 import { LoginCredentials } from '@/app/features/auth/types';
 import { Eye, EyeOff } from 'lucide-react';
+import Cookies from 'js-cookie';
 
 const schema = yup.object().shape({
   email: yup
@@ -119,6 +120,14 @@ export default function Login() {
     }
   }, [setValue]);
 
+  useEffect(() => {
+    const accessToken = Cookies.get('access_token');
+    if (accessToken) {
+      console.log('User is already logged in, redirecting to home.');
+      router.replace('/admin'); // Redirect to home or another route
+    }
+  }, []);
+
   return (
     <div className="min-h-screen w-full bg-white">
       <ToastContainer />
@@ -160,7 +169,7 @@ export default function Login() {
                 <p className="text-sm text-red-500">{errors.email.message}</p>
               )}
 
-              <div className="flex items-center space-x-2">
+              <div className="relative flex items-center space-x-2">
                 <Lock className="h-5 w-5 text-muted-foreground" />
                 <Input
                   {...register("password")}

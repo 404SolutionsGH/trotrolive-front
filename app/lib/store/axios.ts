@@ -1,4 +1,4 @@
-// import Cookies from 'js-cookie';
+import Cookies from 'js-cookie';
 import axios from 'axios';
 
 const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -30,6 +30,24 @@ axiosInstance.interceptors.request.use(
     return Promise.reject(error);
   }
 );
+
+axiosInstance.interceptors.request.use(config => {
+  console.log('Axios Request Config:');
+  console.log('URL:', config.url);
+  console.log('Method:', config.method);
+  console.log('Headers:', config.headers);
+
+  // Add CSRF token
+  const csrfToken = Cookies.get('csrftoken');
+  if (csrfToken) {
+      config.headers['X-CSRFToken'] = csrfToken;
+  }
+
+  return config;
+}, error => {
+  console.error('Axios Request Error:', error);
+  return Promise.reject(error);
+});
 
 // Response Interceptor: Handle 401 errors and refresh tokens
 axiosInstance.interceptors.response.use(

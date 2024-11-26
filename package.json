@@ -23,6 +23,7 @@
     "axios": "^1.7.7",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "cookies-next": "^5.0.2",
     "dotenv": "^16.4.5",
     "formik": "^2.4.6",
     "js-cookie": "^3.0.5",
