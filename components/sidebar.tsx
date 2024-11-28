@@ -82,7 +82,7 @@ export function Sidebar() {
                     <LayoutDashboard className="h-5 w-5" />
                     Dashboard
                 </Link>
-                <Link href="#" className="flex items-center gap-3 rounded-none px-4 py-2 text-white transition-colors hover:bg-white/20">
+                <Link href="/admin/role" className="flex items-center gap-3 rounded-none px-4 py-2 text-white transition-colors hover:bg-white/20">
                     <Star className="h-5 w-5" />
                     Role Upgrade
                 </Link>
