@@ -32,6 +32,7 @@ const setAuthTokens = (tokens: { access?: string; refresh?: string }) => {
   if (tokens.refresh) {
     Cookies.set('refresh_token', tokens.refresh, cookieOptions);
   }
+
 };
 
 const removeAuthTokens = () => {

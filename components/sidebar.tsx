@@ -86,7 +86,7 @@ export function Sidebar() {
                     <Star className="h-5 w-5" />
                     Role Upgrade
                 </Link>
-                <Link href="#" className="flex items-center gap-3 rounded-none px-4 py-2 text-white transition-colors hover:bg-white/20">
+                <Link href="settings" className="flex items-center gap-3 rounded-none px-4 py-2 text-white transition-colors hover:bg-white/20">
                     <Settings className="h-5 w-5" />
                     Settings
                 </Link>

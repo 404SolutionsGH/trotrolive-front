@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -11,7 +11,11 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
-import { Camera, Cloud } from 'lucide-react'
+import { Camera, Cloud, X } from 'lucide-react'
+import 'react-toastify/dist/ReactToastify.css';
+import { toast, ToastContainer } from 'react-toastify';
+import Cookies from 'js-cookie';
+
 
 type Role = "driver" | "owner" | "mate" | "master"
 
@@ -28,19 +32,31 @@ interface RoleFields {
 
 export default function RoleUpgradeForm() {
   const [selectedRole, setSelectedRole] = useState<Role | "">("")
+  const [uploadedFiles, setUploadedFiles] = useState<{
+    [key: string]: File | null
+  }>({})
+
+  // Refs for file inputs
+  const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
 
   const roleFields: RoleFields = {
     driver: {
       fields: [
+        // {
+        //   name: "idCard",
+        //   type: "upload",
+        //   label: "Upload ID Card",
+        // },
+        // {
+        //   name: "license",
+        //   type: "upload",
+        //   label: "Upload Driver's license",
+        // },
         {
-          name: "idCard",
-          type: "upload",
-          label: "Upload ID Card",
-        },
-        {
-          name: "license",
-          type: "upload",
-          label: "Upload Driver's license",
+          name: "licenseNumber",
+          type: "text",
+          label: "License Number",
+          placeholder: "Input your license number...",
         },
       ],
     },
@@ -95,13 +111,136 @@ export default function RoleUpgradeForm() {
     },
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleFileChange = (fieldName: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setUploadedFiles(prev => ({
+        ...prev,
+        [fieldName]: file
+      }))
+    }
+  }
+
+  const handleInputChange = (fieldName: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    setUploadedFiles(prev => ({
+      ...prev,
+      [fieldName]: value
+    }));
+  }
+
+  const handleFileRemove = (fieldName: string) => {
+    setUploadedFiles(prev => {
+      const newFiles = { ...prev }
+      delete newFiles[fieldName]
+      return newFiles
+    })
+
+    // Reset the file input
+    if (fileInputRefs.current[fieldName]) {
+      fileInputRefs.current[fieldName]!.value = ''
+    }
+  }
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission
+
+    // Validate that all required files are uploaded
+    if (!selectedRole) {
+      toast.error("Please select a role")
+      return
+    }
+
+    const requiredFields = roleFields[selectedRole].fields
+    const missingFiles = requiredFields
+      .filter(field => field.type === "upload" || field.type === "camera")
+      .filter(field => !uploadedFiles[field.name])
+
+    if (missingFiles.length > 0) {
+      toast.error(`Please upload all required files: ${missingFiles.map(f => f.label).join(', ')}`)
+      return
+    }
+
+    if (selectedRole === "driver" && !uploadedFiles["licenseNumber"]) {
+      toast.error("Please enter your license number")
+      return
+    }
+
+    // Create FormData to handle file uploads
+    const formData = new FormData()
+
+    formData.append("role", selectedRole)
+
+    const user = localStorage.getItem("user.id")
+
+    // const user = {
+    //   // Assuming you can get the user data, either from context, cookies, or a global state
+    //   // Example: cookies, or user state data
+    //   id: localStorage.getItem("id"), // Replace with actual method to fetch user data
+    //   // email: localStorage.getItem("email"), // Replace with actual method to fetch user data
+    //   // username: Cookies.get("username"), // Adjust to reflect actual user data from your app
+    // };
+
+    console.log("Driver User: ", user);
+
+    formData.append("user", JSON.stringify(user));  // Add the user field to the form data
+
+    // Append all uploaded files
+    Object.entries(uploadedFiles).forEach(([key, file]) => {
+      if (file) {
+        formData.append(key, file)
+      }
+    })
+
+    // Append text input fields
+    requiredFields.forEach((field) => {
+      if (field.type === "text" && field.name) {
+        const inputValue = (document.getElementById(field.name) as HTMLInputElement)?.value
+        if (inputValue) {
+          formData.append(field.name, inputValue)
+        }
+      }
+    })
+
+    try {
+      // Replace with your actual authentication token logic
+      const authToken = Cookies.get('access_token');
+      console.log("Role Token: ", authToken);
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts/api/register/driver/`, {
+        method: "POST",
+        credentials: 'include',
+        headers: {
+          Authorization: `Bearer ${authToken}`.replace(/\s+/g, ' ').trim()
+        },
+        body: formData,
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        toast.success("Role upgraded successfully!")
+        console.log(data)
+        // Optional: Reset form after successful submission
+        handleClearForm()
+      } else {
+        const errorData = await response.json()
+        toast.error("Failed to upgrade role.")
+        console.error(errorData)
+      }
+    } catch (error) {
+      console.error("An error occurred:", error)
+      toast.error("Something went wrong.")
+    }
   }
 
   const handleClearForm = () => {
     setSelectedRole("")
+    setUploadedFiles({})
+    // Reset all file inputs
+    Object.values(fileInputRefs.current).forEach(ref => {
+      if (ref) ref.value = ''
+    })
   }
 
   return (
@@ -111,6 +250,7 @@ export default function RoleUpgradeForm() {
           <div className="flex justify-center items-center">
             <CardTitle className="text-xl items-left text-[#C81E78]">Role Upgrade</CardTitle>
             <Button
+              type="button"
               variant="ghost"
               className="text-[#C81E78] items-right"
               onClick={handleClearForm}
@@ -142,18 +282,46 @@ export default function RoleUpgradeForm() {
             {selectedRole && roleFields[selectedRole].fields.map((field, index) => (
               <div key={index} className="space-y-2">
                 <label className="text-base font-medium">{field.label}</label>
-                {field.type === "upload" ? (
-                  <div className="border rounded-md p-4 text-center cursor-pointer hover:bg-gray-50">
-                    <Cloud className="w-6 h-6 mx-auto mb-2 text-[#C81E78]" />
-                    <span>Select</span>
-                  </div>
-                ) : field.type === "camera" ? (
-                  <div className="border rounded-md p-4 text-center cursor-pointer hover:bg-gray-50">
-                    <Camera className="w-6 h-6 mx-auto mb-2 text-[#C81E78]" />
-                    <span>Select</span>
+                {(field.type === "upload" || field.type === "camera") ? (
+                  <div>
+                    <input
+                      type="file"
+                      accept={field.type === "camera" ? "image/*" : "*/*"}
+                      capture={field.type === "camera" ? "environment" : undefined}
+                      ref={(el) => fileInputRefs.current[field.name] = el}
+                      onChange={(e) => handleFileChange(field.name, e)}
+                      className="hidden"
+                      id={`file-upload-${field.name}`}
+                    />
+                    <label
+                      htmlFor={`file-upload-${field.name}`}
+                      className="border rounded-md p-4 text-center cursor-pointer hover:bg-gray-50 flex items-center justify-center"
+                    >
+                      {field.type === "upload" ? (
+                        <Cloud className="w-6 h-6 mr-2 text-[#C81E78]" />
+                      ) : (
+                        <Camera className="w-6 h-6 mr-2 text-[#C81E78]" />
+                      )}
+                      <span>{uploadedFiles[field.name]
+                        ? uploadedFiles[field.name]!.name
+                        : "Select File"}</span>
+                      {uploadedFiles[field.name] && (
+                        <X
+                          className="w-4 h-4 ml-2 text-red-500"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            handleFileRemove(field.name)
+                          }}
+                        />
+                      )}
+                    </label>
                   </div>
                 ) : (
-                  <Input placeholder={field.placeholder} />
+                  <Input
+                    placeholder={field.placeholder}
+                    value={uploadedFiles[field.name] || ''}
+                    onChange={(e) => handleInputChange(field.name, e)}
+                  />
                 )}
               </div>
             ))}
