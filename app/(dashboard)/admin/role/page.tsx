@@ -189,7 +189,11 @@ export default function RoleUpgradeForm() {
     // Append all uploaded files
     Object.entries(uploadedFiles).forEach(([key, file]) => {
       if (file) {
-        formData.append(key, file)
+        if (key === "idCard") {
+          formData.append("ghana_card", file);
+        } else {
+          formData.append(key, file);
+        }
       }
     })
 
@@ -208,7 +212,11 @@ export default function RoleUpgradeForm() {
       const authToken = Cookies.get('access_token');
       console.log("Role Token: ", authToken);
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts/api/register/driver/`, {
+      const endpoint = selectedRole === 'driver'
+      ? `${process.env.NEXT_PUBLIC_API_URL}/accounts/api/driver/`
+      : `${process.env.NEXT_PUBLIC_API_URL}/accounts/role-upgrade/`;
+
+      const response = await fetch(endpoint, {
         method: "POST",
         credentials: 'include',
         headers: {
@@ -247,7 +255,7 @@ export default function RoleUpgradeForm() {
     <div className="max-w-2xl mx-auto pt-10">
       <Card className="relative">
         <CardHeader className="space-y-1">
-          <div className="flex justify-center items-center">
+          <div className="flex justify-between items-center">
             <CardTitle className="text-xl items-left text-[#C81E78]">Role Upgrade</CardTitle>
             <Button
               type="button"
