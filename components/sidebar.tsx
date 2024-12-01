@@ -13,57 +13,27 @@ export function Sidebar() {
 
 
     const handleLogout = async () => {
-      try {
-          // Get tokens from cookies
-          const csrfToken = Cookies.get('csrftoken');
-          const accessToken = Cookies.get('access_token');
-          const refreshToken = Cookies.get('refresh_token');
+        try {
+            const csrfToken = Cookies.get('csrftoken');
+            const refreshToken = Cookies.get('refresh_token');
 
-          console.log('Logout Tokens:', {
-              csrfToken,
-              accessToken,
-              refreshToken
-          });
+            const res = await axios.post('/accounts/api/logout/', { refresh_token: refreshToken }, {
+              withCredentials: true,
+              headers: { 'X-CSRFToken': csrfToken || '' }
+            });
 
-          // Perform logout request
-          const res = await axios.post('/accounts/api/logout/',
-              {
-                  // Optional: include refresh token in body if needed
-                  refresh_token: refreshToken
-              },
-              {
-                  withCredentials: true,
-                  headers: {
-                      'X-CSRFToken': csrfToken || '',
-                      ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {}),
-                  }
-              }
-          );
+            console.log('Logout successful:', res.data);
 
-          console.log('Logout Response:', res.data);
-
-          // Clear all auth-related storage
-          Cookies.remove('access_token');
-          Cookies.remove('refresh_token');
-          Cookies.remove('csrftoken');
-
-          localStorage.removeItem("refresh_token");
-          localStorage.removeItem("access_token");
-          localStorage.removeItem('user');
-
-          // Redirect to login page
-          router.push('/login');
-      } catch (error) {
-          console.error('Detailed Logout Error:', {
-              status: error.response?.status,
-              data: error.response?.data,
-              headers: error.response?.headers,
-              fullError: error
-          });
-
-          // Fallback redirect
-          router.push('/login');
-      }
+            // Clear tokens and redirect
+            Cookies.remove('access_token');
+            Cookies.remove('refresh_token');
+            Cookies.remove('csrftoken');
+            localStorage.removeItem('user');
+            router.push('/login');
+          } catch (error) {
+            console.error('Logout failed:', error);
+            alert('Logout failed. Please try again.');
+          }
     };
 
     return (

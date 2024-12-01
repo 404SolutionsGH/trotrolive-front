@@ -1,6 +1,7 @@
 import axios, { axiosInstance } from '../../lib/store/axios';
 import { AxiosError } from 'axios';
 import { LoginCredentials, RegisterData, AuthResponse } from '@/app/features/auth/types';
+import Cookies from 'js-cookie';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string, public errors?: number) {
@@ -133,24 +134,43 @@ export const authApi = {
   },
 
   logout: async (): Promise<void> => {
-    const csrfToken = getCsrfToken();
+    const csrfToken = getCsrfToken(); // Fetch the CSRF token
     try {
-      const response = await axiosInstance.post('/accounts/api/logout/', {}, {
-        withCredentials: true,
-        headers: {
-            'X-CSRFToken': csrfToken,  // Include CSRF token in headers
+      console.log('Initiating logout...');
+      const response = await axiosInstance.post(
+        '/accounts/api/logout/',
+        {}, // Body (optional, empty here)
+        {
+          withCredentials: true,
+          headers: {
+            'X-CSRFToken': csrfToken || '', // Ensure the token is sent
+          },
         }
-    });
-    console.log('Logout successful', response.data);
-    } catch (error) {
-      console.error('Logout failed:', error);
-    } finally {
+      );
+      console.log('Logout successful:', response.data);
+
+      // Clear auth-related cookies or tokens
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
+        Cookies.remove('access_token');
+        Cookies.remove('refresh_token');
+      }
+    } catch (error) {
+      // Log detailed error information
+      console.error('Logout failed:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+      alert('Logout failed. Please try again.');
+    } finally {
+      // Additional cleanup
+      if (typeof window !== 'undefined') {
+        Cookies.remove('access_token');
+        Cookies.remove('refresh_token');
       }
     }
   },
+
 };
 
 export const refreshAccessToken = async (): Promise<string | null> => {
