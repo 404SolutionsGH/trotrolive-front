@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -35,6 +35,10 @@ export default function RoleUpgradeForm() {
   const [uploadedFiles, setUploadedFiles] = useState<{
     [key: string]: File | null
   }>({})
+  const [cameraActive, setCameraActive] = useState(false);
+  const [photo, setPhoto] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // Refs for file inputs
   const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
@@ -110,6 +114,44 @@ export default function RoleUpgradeForm() {
       ],
     },
   }
+
+  const handleCaptureSelfie = () => {
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+
+    if (canvas && video) {
+      const context = canvas.getContext("2d");
+      if (context) {
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = canvas.toDataURL("image/png");
+        setPhoto(imageData);
+
+        // Convert dataURL to a file
+        fetch(imageData)
+          .then((res) => res.blob())
+          .then((blob) => {
+            const file = new File([blob], "selfie.png", { type: "image/png" });
+            setUploadedFiles((prev) => ({ ...prev, selfie: file }));
+          });
+      }
+    }
+    setCameraActive(false);
+  };
+
+  const handleCameraAccess = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+        console.log('Camera stream started');
+      }
+      setCameraActive(true);
+    } catch (error) {
+      console.error("Error accessing camera:", error);
+      toast.error("Unable to access camera.");
+    }
+  };
 
   const handleFileChange = (fieldName: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -213,7 +255,7 @@ export default function RoleUpgradeForm() {
       console.log("Role Token: ", authToken);
 
       const endpoint = selectedRole === 'driver'
-      ? `${process.env.NEXT_PUBLIC_API_URL}/accounts/api/driver/`
+      ? `${process.env.NEXT_PUBLIC_API_URL}/accounts/api/register/driver/`
       : `${process.env.NEXT_PUBLIC_API_URL}/accounts/role-upgrade/`;
 
       const response = await fetch(endpoint, {
@@ -251,8 +293,27 @@ export default function RoleUpgradeForm() {
     })
   }
 
+  // Cleanup function to stop the camera stream
+  const cleanupCamera = () => {
+    const video = videoRef.current;
+    if (video && video.srcObject) {
+      const stream = video.srcObject as MediaStream;
+      const tracks = stream.getTracks();
+      tracks.forEach(track => track.stop());
+      video.srcObject = null;
+    }
+  };
+
+  useEffect(() => {
+    // Cleanup the camera when the component unmounts
+    return () => {
+      cleanupCamera();
+    };
+  }, []);
+
   return (
     <div className="max-w-2xl mx-auto pt-10">
+      <ToastContainer />
       <Card className="relative">
         <CardHeader className="space-y-1">
           <div className="flex justify-between items-center">
@@ -287,52 +348,85 @@ export default function RoleUpgradeForm() {
               </Select>
             </div>
 
-            {selectedRole && roleFields[selectedRole].fields.map((field, index) => (
-              <div key={index} className="space-y-2">
-                <label className="text-base font-medium">{field.label}</label>
-                {(field.type === "upload" || field.type === "camera") ? (
-                  <div>
-                    <input
-                      type="file"
-                      accept={field.type === "camera" ? "image/*" : "*/*"}
-                      capture={field.type === "camera" ? "environment" : undefined}
-                      ref={(el) => fileInputRefs.current[field.name] = el}
-                      onChange={(e) => handleFileChange(field.name, e)}
-                      className="hidden"
-                      id={`file-upload-${field.name}`}
-                    />
-                    <label
-                      htmlFor={`file-upload-${field.name}`}
-                      className="border rounded-md p-4 text-center cursor-pointer hover:bg-gray-50 flex items-center justify-center"
-                    >
-                      {field.type === "upload" ? (
-                        <Cloud className="w-6 h-6 mr-2 text-[#C81E78]" />
+            {selectedRole &&
+              roleFields[selectedRole].fields.map((field, index) => (
+                <div key={index} className="space-y-2">
+                  <label className="text-base font-medium">{field.label}</label>
+
+                  {/* Camera or Upload Field */}
+                  {field.type === "camera" ? (
+                    <>
+                      {photo ? (
+                        <div className="space-y-2">
+                          <img src={photo} alt="Selfie preview" className="w-full rounded-md" />
+                          <Button type="button"
+                            className="bg-[#C81E78] hover:bg-[#A61860] text-white"
+                            onClick={() => setPhoto(null)}
+                          >
+                            Retake Selfie
+                          </Button>
+                        </div>
+                      ) : cameraActive ? (
+                        <div>
+                          <video ref={videoRef} className="w-full rounded-md" />
+                          <Button type="button"
+                            className="bg-[#C81E78] hover:bg-[#A61860] text-white mt-2"
+                            onClick={handleCaptureSelfie}
+                          >
+                            Capture Photo
+                          </Button>
+                        </div>
                       ) : (
-                        <Camera className="w-6 h-6 mr-2 text-[#C81E78]" />
+                        <Button type="button"
+                          className="bg-[#C81E78] hover:bg-[#A61860] text-white"
+                          onClick={handleCameraAccess}
+                        >
+                          Open Camera
+                        </Button>
                       )}
-                      <span>{uploadedFiles[field.name]
-                        ? uploadedFiles[field.name]!.name
-                        : "Select File"}</span>
-                      {uploadedFiles[field.name] && (
-                        <X
-                          className="w-4 h-4 ml-2 text-red-500"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            handleFileRemove(field.name)
-                          }}
-                        />
-                      )}
-                    </label>
-                  </div>
-                ) : (
-                  <Input
-                    placeholder={field.placeholder}
-                    value={uploadedFiles[field.name] || ''}
-                    onChange={(e) => handleInputChange(field.name, e)}
-                  />
-                )}
-              </div>
-            ))}
+                      <canvas ref={canvasRef} className="hidden" />
+                    </>
+                  ) : field.type === "upload" ? (
+                    <div>
+                      <input
+                        type="file"
+                        accept="*/*"
+                        ref={(el) => (fileInputRefs.current[field.name] = el)}
+                        onChange={(e) => handleFileChange(field.name, e)}
+                        className="hidden"
+                        id={`file-upload-${field.name}`}
+                      />
+                      <label
+                        htmlFor={`file-upload-${field.name}`}
+                        className="border rounded-md p-4 text-center cursor-pointer hover:bg-gray-50 flex items-center justify-center"
+                      >
+                        <Cloud className="w-6 h-6 mr-2 text-[#C81E78]" />
+                        <span>
+                          {uploadedFiles[field.name]
+                            ? uploadedFiles[field.name]!.name
+                            : "Select File"}
+                        </span>
+                        {uploadedFiles[field.name] && (
+                          <X
+                            className="w-4 h-4 ml-2 text-red-500 cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleFileRemove(field.name);
+                            }}
+                          />
+                        )}
+                      </label>
+                    </div>
+                  ) : (
+                    <Input
+                      placeholder={field.placeholder}
+                      value={uploadedFiles[field.name] || ""}
+                      onChange={(e) => handleInputChange(field.name, e)}
+                    />
+                  )}
+                </div>
+              ))}
+
 
             <Button
               type="submit"

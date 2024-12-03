@@ -48,7 +48,7 @@ export function Sidebar() {
             </div>
             <nav className="flex-1 space-y-2 py-4">
                 <h2 className="mb-6 px-4 text-2xl font-bold">Menu</h2>
-                <Link href="#" className="flex items-center gap-3 rounded-none bg-white/10 px-4 py-2 text-white transition-colors hover:bg-white/20">
+                <Link href="/admin" className="flex items-center gap-3 rounded-none bg-white/10 px-4 py-2 text-white transition-colors hover:bg-white/20">
                     <LayoutDashboard className="h-5 w-5" />
                     Dashboard
                 </Link>
@@ -56,11 +56,11 @@ export function Sidebar() {
                     <Star className="h-5 w-5" />
                     Role Upgrade
                 </Link>
-                <Link href="settings" className="flex items-center gap-3 rounded-none px-4 py-2 text-white transition-colors hover:bg-white/20">
+                <Link href="/admin/settings" className="flex items-center gap-3 rounded-none px-4 py-2 text-white transition-colors hover:bg-white/20">
                     <Settings className="h-5 w-5" />
                     Settings
                 </Link>
-                <Link href="#" className="flex items-center gap-3 rounded-none px-4 py-2 text-white transition-colors hover:bg-white/20">
+                <Link href="/admin/about" className="flex items-center gap-3 rounded-none px-4 py-2 text-white transition-colors hover:bg-white/20">
                     <HelpCircle className="h-5 w-5" />
                     About
                 </Link>
