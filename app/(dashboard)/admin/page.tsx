@@ -1,26 +1,90 @@
 "use client"
 
-import { CreditCard, MapPin, Send } from 'lucide-react'
-
+import { useRouter } from "next/navigation";
+import { CreditCard, MapPin, Send, PlusCircle } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { checkAuth } from '@/app/features/auth/authSlice';
+import { toast, ToastContainer } from 'react-toastify';
+import Cookies from 'js-cookie';
 
+interface Wallet {
+  id: string;
+  balance: number;
+}
 
 export default function Admin() {
 
+  const router = useRouter();
+
+  const [wallet, setWallet] = useState<Wallet | null>(null);
   const dispatch = useDispatch();
 
   useEffect(() => {
     dispatch(checkAuth());
   }, [dispatch]);
 
+  const createWallet = async () => {
+    const token = Cookies.get('access_token');
+    console.log("token", token);
+
+    try {
+      const response = await fetch('http://localhost:8000/trotro-pay/wallet/', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Wallet Created: ", data);
+        setWallet(data.wallet);
+        toast.success("Wallet created successfully!");
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || "Failed to create wallet");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong. Please try again.");
+    }
+  };
+
+  useEffect(() => {
+    createWallet();
+  }, []);
+
+  const [fullName, setFullName] = useState("");
+
+  // Fetch full name from localStorage when component mounts
+  useEffect(() => {
+    const storedName = localStorage.getItem("user");
+    if (storedName) {
+      const user = JSON.parse(storedName);
+      setFullName(user.full_name); // Update state with full name
+    }
+  }, []);
+
   return (
     <main className="p-6">
+      <ToastContainer/>
       <h2 className="mb-6 text-2xl font-semibold text-[#B4257A]">Dashboard</h2>
+
+      <div className="mb-8 flex items-center justify-between">
+        {/* <div>
+          <h3 className="text-lg font-semibold">Wallet Information</h3>
+          <p className="text-muted-foreground">{wallet ? `GH₵ ${wallet.balance}` : "No wallet available"}</p>
+        </div> */}
+        <Button className="bg-[#B4257A] text-white" onClick={createWallet}>
+          <PlusCircle className="mr-2 h-5 w-5" />
+          Create Wallet
+        </Button>
+      </div>
 
       <div className="mb-8 grid gap-6 md:grid-cols-3">
         <Card className="col-span-2">
@@ -31,8 +95,8 @@ export default function Admin() {
               </div>
               <span className="text-lg text-muted-foreground">0241234567</span>
             </div>
-            <div className="text-4xl font-bold">GH₵ 2,000</div>
-            <div className="text-[#B4257A]">Nana Akufo</div>
+            <div className="text-4xl font-bold">{wallet ? `GH₵ ${wallet.balance}` : "No wallet available"}</div>
+            <div className="text-[#B4257A]">{fullName || "User"}</div>
           </CardContent>
         </Card>
         <div className="grid grid-cols-2 gap-4">
@@ -40,7 +104,8 @@ export default function Admin() {
             <Send className="h-10 w-10" />
             <span>PAY</span>
           </Button>
-          <Button className="flex h-auto flex-col items-center justify-center gap-2 bg-white p-6 text-[#B4257A] hover:bg-white/90">
+          <Button className="flex h-auto flex-col items-center justify-center gap-2 bg-white p-6 text-[#B4257A] hover:bg-white/90"
+          onClick={() => router.push("/admin/fund")}>
             <CreditCard className="h-10 w-10" />
             <span className=''>FUND</span>
           </Button>
