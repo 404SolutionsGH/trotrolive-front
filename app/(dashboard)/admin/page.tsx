@@ -15,6 +15,14 @@ interface Wallet {
   balance: number;
 }
 
+interface Transaction {
+  id: number;
+  amount: string;
+  transaction_type: string;
+  description: string;
+  created_at: string;
+}
+
 export default function Admin() {
 
   const router = useRouter();
@@ -22,11 +30,43 @@ export default function Admin() {
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
 
   useEffect(() => {
     dispatch(checkAuth());
   }, [dispatch]);
 
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
+
+  const fetchTransactions = async () => {
+    setLoading(true);
+    const token = Cookies.get("access_token");
+
+    try {
+      const response = await fetch("http://localhost:8000/trotro-pay/wallet/", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setTransactions(data.transactions);
+      } else {
+        toast.error("Failed to fetch transactions.");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Check wallet balance
   const checkWalletBalance = async () => {
@@ -59,42 +99,44 @@ export default function Admin() {
   };
 
   // Create wallet only if not already existing
-const createWallet = async () => {
-  if (wallet) {
-    toast.info("You already have a wallet!");
-    return;
-  }
+  const createWallet = async () => {
 
-  const token = Cookies.get("access_token");
-  setLoading(true);
-  try {
-    const response = await fetch("http://localhost:8000/trotro-pay/wallet/", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      setWallet({ id: data.user_id, balance: data.balance });
-      toast.success("Wallet created successfully!");
-
-      // Redirect to fund wallet page
-      router.push("/admin/fund");
-    } else {
-      const error = await response.json();
-      toast.error(error.detail || "Failed to create wallet");
+    if (wallet) {
+      toast.info("You already have a wallet!");
+      return;
     }
-  } catch (err) {
-    console.error(err);
-    toast.error("Something went wrong. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
+
+    const token = Cookies.get("access_token");
+    setLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:8000/trotro-pay/wallet/", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setWallet({ id: data.user_id, balance: data.balance });
+        toast.success("Wallet created successfully!");
+
+        // Redirect to fund wallet page
+        router.push("/admin/fund");
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || "Failed to create wallet");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Ensure wallet balance is checked only once
   useEffect(() => {
@@ -163,32 +205,39 @@ const createWallet = async () => {
           <div className="p-6">
             <h3 className="text-lg font-semibold">Transaction History</h3>
           </div>
-          {[
-            { type: "Paid", location: "Kasoa Old Market - Winneba", amount: "-GH₵ 140" },
-            { type: "Paid", location: "Kasoa Old Market - Winneba", amount: "-GH₵ 140" },
-            { type: "Paid", location: "Kasoa Old Market - Winneba", amount: "-GH₵ 140" },
-            { type: "Received", location: "Via MOMO", amount: "-GH₵ 150" },
-            { type: "Received", location: "Via MOMO", amount: "-GH₵ 150" },
-          ].map((transaction, index) => (
-            <div key={index} className="flex items-center justify-between border-t p-4">
-              <div className="flex items-start gap-4">
-                <div className={`h-2 w-2 translate-y-2 rounded-full ${transaction.type === "Paid" ? "bg-[#B4257A]" : "bg-green-500"}`} />
-                <div>
-                  <div className="font-medium">{transaction.type}</div>
-                  <div className="text-sm text-muted-foreground">{transaction.location}</div>
+          {loading ? (
+            <div className="p-6 text-center">Loading...</div>
+          ) : transactions.length > 0 ? (
+            transactions.map((transaction) => (
+              <div key={transaction.id} className="flex items-center justify-between border-t p-4">
+                <div className="flex items-start gap-4">
+                  <div
+                    className={`h-2 w-2 translate-y-2 rounded-full ${
+                      transaction.transaction_type === "DEPOSIT" ? "bg-green-500" : "bg-[#B4257A]"
+                    }`}
+                  />
+                  <div>
+                    <div className="font-medium">{transaction.transaction_type}</div>
+                    <div className="text-sm text-muted-foreground">{transaction.description}</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <MapPin className="h-5 w-5 text-muted-foreground" />
+                  <div className="text-right">
+                    <div className={`font-medium ${transaction.amount.startsWith("-") ? "text-red-500" : "text-green-500"}`}>
+                      {transaction.amount.startsWith("-") ? transaction.amount : `+GH₵ ${transaction.amount}`}
+                    </div>
+                    <div className="text-sm text-muted-foreground">{new Date(transaction.created_at).toLocaleString()}</div>
+                  </div>
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                <MapPin className="h-5 w-5 text-muted-foreground" />
-                <div className="text-right">
-                  <div className="font-medium">{transaction.amount}</div>
-                  <div className="text-sm text-muted-foreground">10 August 2024</div>
-                </div>
-              </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <div className="p-6 text-center">No transactions available.</div>
+          )}
         </CardContent>
       </Card>
+
     </main>
   )
 }
