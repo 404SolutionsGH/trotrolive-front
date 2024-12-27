@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import Cookies from "js-cookie";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,7 +36,7 @@ export default function FundWallet() {
       if (response.ok) {
         const data = await response.json();
         console.log("Response data:", data);
-        toast.success("Payment initialized. Redirecting to Paystack...");
+        toast.success("Payment initialized");
         // Redirect to the authorization URL provided by the backend
         window.location.href = data.authorization_url;
       } else {
@@ -51,7 +51,7 @@ export default function FundWallet() {
 
   return (
     <div className="p-6">
-
+      <ToastContainer />
       <h2 className="mb-4 text-2xl font-semibold text-[#B4257A]">Fund Wallet</h2>
 
       <div className="mb-4">

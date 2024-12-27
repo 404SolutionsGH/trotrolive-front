@@ -20,43 +20,85 @@ export default function Admin() {
   const router = useRouter();
 
   const [wallet, setWallet] = useState<Wallet | null>(null);
+  const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
 
   useEffect(() => {
     dispatch(checkAuth());
   }, [dispatch]);
 
-  const createWallet = async () => {
-    const token = Cookies.get('access_token');
-    console.log("token", token);
+
+  // Check wallet balance
+  const checkWalletBalance = async () => {
+    const token = Cookies.get("access_token");
+    const userId = JSON.parse(localStorage.getItem("user") || "{}").id;
 
     try {
-      const response = await fetch('http://localhost:8000/trotro-pay/wallet/', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `http://localhost:8000/trotro-pay/wallet-balance/${userId}/`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Wallet Created: ", data);
-        setWallet(data.wallet);
-        toast.success("Wallet created successfully!");
+        setWallet({ id: data.user_id, balance: data.balance });
       } else {
-        const error = await response.json();
-        toast.error(error.detail || "Failed to create wallet");
+        setWallet(null);
       }
     } catch (err) {
       console.error(err);
-      toast.error("Something went wrong. Please try again.");
+      toast.error("Something went wrong while fetching wallet balance.");
     }
   };
 
+  // Create wallet only if not already existing
+const createWallet = async () => {
+  if (wallet) {
+    toast.info("You already have a wallet!");
+    return;
+  }
+
+  const token = Cookies.get("access_token");
+  setLoading(true);
+  try {
+    const response = await fetch("http://localhost:8000/trotro-pay/wallet/", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      setWallet({ id: data.user_id, balance: data.balance });
+      toast.success("Wallet created successfully!");
+
+      // Redirect to fund wallet page
+      router.push("/admin/fund");
+    } else {
+      const error = await response.json();
+      toast.error(error.detail || "Failed to create wallet");
+    }
+  } catch (err) {
+    console.error(err);
+    toast.error("Something went wrong. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
+  // Ensure wallet balance is checked only once
   useEffect(() => {
-    createWallet();
+    checkWalletBalance();
   }, []);
 
   const [fullName, setFullName] = useState("");
@@ -76,13 +118,17 @@ export default function Admin() {
       <h2 className="mb-6 text-2xl font-semibold text-[#B4257A]">Dashboard</h2>
 
       <div className="mb-8 flex items-center justify-between">
-        {/* <div>
-          <h3 className="text-lg font-semibold">Wallet Information</h3>
-          <p className="text-muted-foreground">{wallet ? `GH₵ ${wallet.balance}` : "No wallet available"}</p>
-        </div> */}
-        <Button className="bg-[#B4257A] text-white" onClick={createWallet}>
-          <PlusCircle className="mr-2 h-5 w-5" />
-          Create Wallet
+        <Button
+          className="bg-[#B4257A] text-white"
+          onClick={createWallet}
+          disabled={!!wallet || loading}
+        >
+          {loading ? "Creating..." : (
+            <>
+              <PlusCircle className="mr-2 h-5 w-5" />
+              Create Wallet
+            </>
+          )}
         </Button>
       </div>
 
@@ -105,7 +151,7 @@ export default function Admin() {
             <span>PAY</span>
           </Button>
           <Button className="flex h-auto flex-col items-center justify-center gap-2 bg-white p-6 text-[#B4257A] hover:bg-white/90"
-          onClick={() => router.push("/admin/fund")}>
+          onClick={() => router.push("/admin/deposit")}>
             <CreditCard className="h-10 w-10" />
             <span className=''>FUND</span>
           </Button>
