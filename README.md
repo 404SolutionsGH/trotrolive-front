@@ -20,6 +20,27 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Update README to Include `.env` File Instructions
+
+### Add the `.env` File
+1. Create a `.env` file in the root directory of your project if it doesn't already exist.
+2. Add the following entry to specify the Django API URL:
+
+   ```plaintext
+   NEXT_PUBLIC_API_URL=<your_django_api_url>
+   ```
+
+   Replace `<NEXT_PUBLIC_API_URL>` with the actual URL of your Django API (e.g., `http://localhost:8000` for local development or your production URL).
+
+3. Save the file. Make sure the `.env` file is included in your `.gitignore` to prevent sensitive information from being committed to version control.
+
+### Example `.env` File
+```plaintext
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+Let me know if you want this integrated into an existing README structure!
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
