@@ -39,8 +39,6 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-Let me know if you want this integrated into an existing README structure!
-
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
