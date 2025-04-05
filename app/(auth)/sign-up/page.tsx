@@ -3,8 +3,14 @@
 import { CivicAuthProvider, UserButton } from "@civic/auth-web3/react";
 
 export default function SignUpPage() {
+  const clientId = process.env.NEXT_PUBLIC_CIVIC_CLIENT_ID;
+
+  if (!clientId) {
+    throw new Error("Civic Client ID is not defined in environment variables.");
+  }
+
   return (
-    <CivicAuthProvider clientId="25b8534f-65b4-4cd0-8d2c-76ec66b6ddcd">
+    <CivicAuthProvider clientId={clientId}>
       <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-4">Welcome to TroTroLive</h1>
