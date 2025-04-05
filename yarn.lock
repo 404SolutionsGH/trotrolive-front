@@ -1088,6 +1088,13 @@
   dependencies:
     buffer "~6.0.3"
 
+"@solana/wallet-adapter-base-ui@^0.1.3":
+  version "0.1.3"
+  resolved "https://registry.yarnpkg.com/@solana/wallet-adapter-base-ui/-/wallet-adapter-base-ui-0.1.3.tgz#c30bf296b9ba7933ed6cb8cc9f218dc0d99af993"
+  integrity sha512-me3iyLGRS+0NevvL1ixzmTGro0fuJlSWSSmNVjMbfqSx+6ooqY2A5SyuTur27F+Qa2L/b7tzH3L0ojLkHC2rmw==
+  dependencies:
+    "@solana/wallet-adapter-react" "^0.15.36"
+
 "@solana/wallet-adapter-base@^0.9.23", "@solana/wallet-adapter-base@^0.9.24":
   version "0.9.24"
   resolved "https://registry.yarnpkg.com/@solana/wallet-adapter-base/-/wallet-adapter-base-0.9.24.tgz#648164f2f90a5ea3bbb5760b05f960b7fb1f4d6b"
@@ -1097,6 +1104,15 @@
     "@wallet-standard/base" "^1.0.1"
     "@wallet-standard/features" "^1.0.3"
     eventemitter3 "^4.0.7"
+
+"@solana/wallet-adapter-react-ui@^0.9.36":
+  version "0.9.36"
+  resolved "https://registry.yarnpkg.com/@solana/wallet-adapter-react-ui/-/wallet-adapter-react-ui-0.9.36.tgz#82c79315564fc7c17f72186b784bfb71dd2fd2fd"
+  integrity sha512-MotBe0KTdh2Dk37OkJ5IHwJjVKqy1paDn5My9sGALRcgA39T8dJ6OjY8dJNe+9bjRWDRDDdGZ8CBLdUa1rWDAg==
+  dependencies:
+    "@solana/wallet-adapter-base" "^0.9.24"
+    "@solana/wallet-adapter-base-ui" "^0.1.3"
+    "@solana/wallet-adapter-react" "^0.15.36"
 
 "@solana/wallet-adapter-react@^0.15.36":
   version "0.15.36"
