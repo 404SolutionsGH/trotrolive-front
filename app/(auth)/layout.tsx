@@ -1,30 +1,23 @@
-import '../globals.css';
-// import { Poppins } from 'next/font/google';
+'use client';
 
-// const poppins = Poppins({
-//     subsets: ['latin'],
-//     variable: '--font-poppins',
-//     weight: ['300', '400', '500'],
-// })
+import { CivicAuthProvider, UserButton } from "@civic/auth/react";
 
-export default function AuthLayout({
-    children
-}: {
-    children: React.ReactNode
-}) {
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <CivicAuthProvider clientId="25b8534f-65b4-4cd0-8d2c-76ec66b6ddcd">
+      <div className="min-h-screen flex flex-col">
+        {/* Header */}
+        <header className="w-full bg-gray-800 text-white py-4 px-6 flex justify-between items-center">
+          <h1 className="text-lg font-bold">TroTroLive</h1>
+          <div>
+            {/* User Profile Button */}
+            <UserButton />
+          </div>
+        </header>
 
-    return (
-        <html lang='en'>
-
-        <head>
-            <meta name='theme-color' content='#B726B2' />
-        </head>
-
-            <body className='font-poppins'>
-
-                {children}
-
-            </body>
-        </html>
-    )
+        {/* Main Content */}
+        <main className="flex-1 bg-gray-100 p-6">{children}</main>
+      </div>
+    </CivicAuthProvider>
+  );
 }
