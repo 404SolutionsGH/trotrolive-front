@@ -207,3 +207,21 @@ body {
   max-height: var(--radix-select-content-available-height);
 }
 
+
+/* Width of the scrollbar */
+::-webkit-scrollbar {
+  width: 8px; /* Adjust the width as needed */
+  height: 6px;
+  background: transparent; /* Make the scrollbar background transparent */
+}
+
+/* Track (hidden by making it transparent) */
+::-webkit-scrollbar-track {
+  background: transparent; /* Completely transparent to hide the track */
+}
+
+/* Thumb (visible part of the scrollbar) */
+::-webkit-scrollbar-thumb {
+  background: rgba(10, 152, 136, 0.879); /* Your desired thumb color */
+  border-radius: 5px; /* Rounded corners */
+}
