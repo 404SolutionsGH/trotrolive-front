@@ -1,32 +1,163 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
+'use client';
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { UserButton } from "@civic/auth/react";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { useState, useEffect } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Menu, X } from "lucide-react";
+import Image from "next/image";
 
 export function SiteHeader() {
+  const [isClient, setIsClient] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+ 
+  // Always call hooks at the top level, regardless of client/server
+  const wallet = useWallet();
+ 
+  useEffect(() => {
+    setIsClient(true); // Set to true after the component mounts
+
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+ 
+  // Safely use wallet data only when on client side
+  const publicKey = isClient ? wallet.publicKey : null;
+  const isConnected = isClient && !!publicKey;
+
+  // Close mobile menu when clicking outside
+  const handleClickOutside = () => {
+    setMobileMenuOpen(false);
+  };
+ 
   return (
-    <header className="w-full bg-white py-4">
-      <div className="container flex items-center justify-between">
-        <Link href="/" className="font-bold text-xl text-[#0A2342]">
-          logo
-        </Link>
-        <nav className="hidden md:flex items-center space-x-6">
-          <Link href="/" className="text-sm font-medium text-[#0A2342]">
+    <header 
+      className="sticky top-0 z-50 w-full transition-colors duration-300 bg-none"
+    >
+      <div className={`container flex h-16 items-center justify-between transition-colors duration-300 ${
+        scrolled ? 'bg-transparent' : 'bg-white'
+      } ml-5`}>
+        <div className="flex items-center ml-12 scale-75">
+          <Link href="/" prefetch={true} className="font-bold">
+            <Image
+              src="https://i.imgur.com/4TKFM6L.png"
+              alt="Logo"
+              unoptimized={true}
+              width={50}
+              height={50}
+             />
+          </Link>
+        </div>
+
+        {/* Desktop Navigation */}
+        <nav className="hidden mx-auto md:flex gap-6">
+          <Link href="/" prefetch={true} className="hover:text-primary">
             Home
           </Link>
-          <Link href="/services" className="text-sm font-medium text-[#0A2342]">
+          <Link href="/services" prefetch={true} className="hover:text-primary">
             Services
           </Link>
-          <Link href="/contact" className="text-sm font-medium text-[#0A2342]">
+          <Link href="/contact" prefetch={true} className="hover:text-primary">
             Contact us
           </Link>
-          <Link href="/about" className="text-sm font-medium text-[#0A2342]">
+          <Link href="/about" prefetch={true} className="hover:text-primary">
             About us
           </Link>
         </nav>
-        <Button size="sm" className="bg-[#D6246E] hover:bg-[#B51E5B] text-white">
-          Sign up
-        </Button>
-      </div>
-    </header>
-  )
-}
 
+        {/* User Account Section */}
+        <div className="flex items-center gap-4">
+          {isConnected ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  User Account
+                  <span className="text-xs">
+                    ({publicKey?.toString().slice(0, 4)}...{publicKey?.toString().slice(-4)})
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <div className="p-2 py-12">
+                  <UserButton />
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link href="/auth/sign-up" prefetch={true}>
+              <Button variant="secondary" size='lg' className="bg-pink-100 text-xl mr-4 text-pink-800 hover:bg-pink-200">
+                Join Us
+              </Button>
+            </Link>
+          )}
+          
+          {/* Mobile Menu Button */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="md:hidden"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </Button>
+        </div>
+      </div>
+
+      {/* Mobile Navigation Overlay */}
+      {mobileMenuOpen && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 z-40" 
+            onClick={handleClickOutside}
+          />
+          <div className="fixed top-16 left-0 right-0 bg-white z-40 p-4 flex flex-col items-center">
+            <nav className="flex flex-col items-center gap-4 py-4 w-full">
+              <Link 
+                href="/" 
+                className="hover:text-primary py-2"
+                onClick={handleClickOutside}
+                prefetch={true}
+              >
+                Home
+              </Link>
+              <Link 
+                href="/services" 
+                className="hover:text-primary py-2"
+                onClick={handleClickOutside}
+                prefetch={true}
+              >
+                Services
+              </Link>
+              <Link 
+                href="/contact" 
+                className="hover:text-primary py-2"
+                onClick={handleClickOutside}
+                prefetch={true}
+              >
+                Contact us
+              </Link>
+              <Link 
+                href="/about" 
+                className="hover:text-primary py-2"
+                onClick={handleClickOutside}
+                prefetch={true}
+              >
+                About us
+              </Link>
+            </nav>
+          </div>
+        </>
+      )}
+    </header>
+  );
+}

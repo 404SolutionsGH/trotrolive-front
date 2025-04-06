@@ -1,34 +1,13 @@
 'use client'
-// import React, { useState, useEffect } from 'react'
-// import Image from 'next/image'
-// import SelectCity from '@/components/UI/select/SelectCity';
-// import CustomSelectOrigin from '@/components/UI/select/SelectLocation';
-// import SelectDestination from '@/components/UI/select/SelectDestination';
-// import ContactUs from '@/components/sections/Contact';
 
-// Images Import
-import phone from "../public/assets/phone.svg";
-import playStore from "../public/assets/Google play.svg";
-import appStore from "../public/assets/AppStore.svg";
-import hero from "../public/assets/home-hero.svg";
-// import contact from "../public/assets/pexels-picha-stock-3894377 1.jpg"
-// import book from "../public/assets/book.svg";
-// import card from "../public/assets/card.svg";
-// import flag from "../public/assets/flag.svg";
-// import Navbar from '@/components/navbar';
-// import Footer from '@/components/footer';
 import Support from "@/components/support";
-
-
 import Image from "next/image"
 import Link from "next/link"
 import { Phone } from "lucide-react"
 import { Book, CreditCard, Flag } from 'lucide-react'
-
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useEffect, useState } from "react";
-// import { Card, CardContent } from "@/components/ui/card"
 
 interface FeatureItemProps {
   icon: React.ReactNode
@@ -89,39 +68,11 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Header */}
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold">
-            logo
-          </Link>
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="/" className="text-sm font-medium">
-              Home
-            </Link>
-            <Link href="/about" className="text-sm font-medium">
-              About us
-            </Link>
-            <Link href="/services" className="text-sm font-medium">
-              Services
-            </Link>
-            <Link href="/contact" className="text-sm font-medium">
-              Contact us
-            </Link>
-          </nav>
-          <Link href="/sign-up">
-            <Button variant="secondary" className="bg-pink-100 text-pink-800 hover:bg-pink-200">
-              Sign Up
-            </Button>
-          </Link>
-        </div>
-      </header>
-
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative">
           <Image
-            src={hero}
+            src='/assets/home-hero.svg'
             alt="Person in car"
             width={1200}
             height={600}
@@ -187,7 +138,7 @@ export default function Home() {
         <section className="bg-gradient-to-r from-yellow-50 via-pink-50 to-pink-100 py-16">
           <div className="container mx-auto px-4 grid md:grid-cols-2 gap-8 items-center">
             <Image
-              src={phone}
+              src='/assets/phone.svg'
               alt="Mobile app screenshot"
               width={400}
               height={800}
@@ -200,14 +151,14 @@ export default function Home() {
               </p>
               <div className="flex gap-4 mb-8">
                 <Image
-                  src={appStore}
+                  src='/assets/AppStore.svg'
                   alt="Download on App Store"
                   width={140}
                   height={42}
                   className="h-[42px] w-auto"
                 />
                 <Image
-                  src={playStore}
+                  src='/assets/Google play.svg'
                   alt="Get it on Google Play"
                   width={140}
                   height={42}

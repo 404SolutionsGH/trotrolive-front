@@ -10,7 +10,7 @@ import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import "@solana/wallet-adapter-react-ui/styles.css";
 import { SiteHeader } from "@/components/site-header";
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   const [isClient, setIsClient] = useState(false);
   const clientId = process.env.NEXT_PUBLIC_CIVIC_CLIENT_ID;
   const endpoint = "https://api.devnet.solana.com";
@@ -21,7 +21,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
   // Avoid hydration mismatch
   if (!isClient) {
-    return <div className="min-h-screen bg-gray-900"></div>;
+    return <div className="min-h-screen bg-gray-100"></div>;
   }
 
   return (
@@ -34,7 +34,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               <SiteHeader />
 
               {/* Main Content */}
-              <main className="flex-1 bg-gray-900 p-6">{children}</main>
+              <main className="flex-1">{children}</main>
             </div>
           </CivicAuthProvider>
         </WalletModalProvider>
