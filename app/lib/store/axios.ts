@@ -16,7 +16,7 @@ export const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    if (config.url?.includes('/login/')) {
+    if (config.url?.includes('/auth/login/')) {
       return config;
     }
 
@@ -74,7 +74,7 @@ axiosInstance.interceptors.response.use(
         console.error('Token refresh failed:', refreshError);
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
-        window.location.href = '/login'; // Redirect to login
+        window.location.href = '/auth/login'; // Redirect to login
         return Promise.reject(refreshError);
       }
     }

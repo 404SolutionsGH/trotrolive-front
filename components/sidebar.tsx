@@ -29,10 +29,11 @@ export function Sidebar() {
             Cookies.remove('refresh_token');
             Cookies.remove('csrftoken');
             localStorage.removeItem('user');
-            router.push('/login');
-          } catch (error) {
+            router.push('/');
+        } catch (error) {
             console.error('Logout failed:', error);
-            alert('Logout failed. Please try again.');
+            // alert('Logout failed. Please try again.');
+            router.push('/');
           }
     };
 

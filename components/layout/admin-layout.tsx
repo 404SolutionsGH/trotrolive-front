@@ -4,7 +4,8 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Header } from "../header";
 import { Sidebar } from "../sidebar";
-import { getCookie } from "cookies-next";
+import Layout from "@/app/wallet-provider";
+// import { getCookie } from "cookies-next";
 
 export default function AdminLayout({
   children,
@@ -15,20 +16,22 @@ export default function AdminLayout({
 
   useEffect(() => {
     // Check for the presence of the access token
-    const accessToken = getCookie("access_token");
+    // const accessToken = getCookie("access_token");
 
-    if (!accessToken) {
-      // Redirect to login if no token is found
-      router.push("/login");
-    }
+    // if (!accessToken) {
+    //   // Redirect to login if no token is found
+    //   router.push("/auth/login");
+    // }
   }, [router]);
 
   return (
     <div className="flex h-screen bg-gray-100">
       <Sidebar />
       <div className="min-h-screen flex-1 overflow-auto">
-        <Header />
-        {children}
+        <Layout>
+          <Header />
+          {children}
+        </Layout>
       </div>
     </div>
   );

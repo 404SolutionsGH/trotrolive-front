@@ -33,7 +33,7 @@ const WalletPage = () => {
         <WalletProvider wallets={[]} autoConnect>
           <WalletModalProvider>
             <CivicAuthProvider clientId={`${clientId}`}>
-              <div className="min-h-screen flex flex-col items-center justify-center bg-[url(https://i.imgur.com/h6v4f1k.jpg)]">
+              <div className="min-h-screen brightness-50 flex flex-col items-center justify-center bg-[url(https://i.imgur.com/h6v4f1k.jpg)]">
                 <h1 className="text-2xl font-bold mb-4">Connect your wallet</h1>
                 <p className="text-gray-600 mb-6">Connect your Solana wallet to continue</p>
                 <WalletMultiButton />
@@ -55,7 +55,7 @@ const ConnectionRedirect = () => {
   useEffect(() => {
     if (publicKey) {
       const redirectTimer = setTimeout(() => {
-        router.push('/');
+        router.push('/dashboard/admin');
       }, 1000);
       
       return () => clearTimeout(redirectTimer);

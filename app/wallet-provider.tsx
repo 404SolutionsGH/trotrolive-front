@@ -8,7 +8,7 @@ import {
 } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import "@solana/wallet-adapter-react-ui/styles.css";
-import { SiteHeader } from "@/components/site-header";
+// import { SiteHeader } from "@/components/site-header";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isClient, setIsClient] = useState(false);
@@ -31,7 +31,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <CivicAuthProvider clientId={`${clientId}`}>
             <div className="min-h-screen flex flex-col">
               {/* Header */}
-              <SiteHeader />
+              {/* <SiteHeader /> */}
 
               {/* Main Content */}
               <main className="flex-1">{children}</main>

@@ -88,13 +88,13 @@ export function SiteHeader() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <div className="p-2 py-12">
+                <div className="p-2 py-16 -mt-10">
                   <UserButton />
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Link href="/auth/sign-up" prefetch={true}>
+            <Link href="/auth/login" prefetch={true}>
               <Button variant="secondary" size='lg' className="bg-pink-100 text-xl mr-4 text-pink-800 hover:bg-pink-200">
                 Join Us
               </Button>

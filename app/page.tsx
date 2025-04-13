@@ -8,6 +8,7 @@ import { Book, CreditCard, Flag } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useEffect, useState } from "react";
+import { SiteHeader } from "@/components/site-header";
 
 interface FeatureItemProps {
   icon: React.ReactNode
@@ -69,6 +70,7 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-1">
+        <SiteHeader />
         {/* Hero Section */}
         <section className="relative">
           <Image
