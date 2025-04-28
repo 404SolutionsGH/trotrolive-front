@@ -6,7 +6,6 @@ export async function middleware(req: NextRequest) {
 
   const { pathname } = req.nextUrl;
 
-  // Check if the user is authenticated (in this case, we'll use a simple cookie flag)
   const isAuthenticated = req.cookies.get('authenticated')?.value === 'true';
 
   // If trying to access login page while authenticated, redirect to dashboard
@@ -14,15 +13,13 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard/admin', req.url));
   }
 
-  // Protect dashboard/admin routes
-  if (pathname.startsWith('/dashboard/admin')) {
+  if (pathname.startsWith('/dashboard/admin') || pathname.startsWith('/dashboard/rides')) {
     // If not authenticated, redirect to login
     if (!isAuthenticated) {
       return redirectToLogin(req, pathname);
     }
   }
 
-  // For all routes, add cache control headers
   const response = NextResponse.next();
   addCacheControlHeaders(response);
   return response;
@@ -41,9 +38,14 @@ function redirectToLogin(req: NextRequest, pathname: string) {
 }
 
 export const config = {
-  matcher: ['/dashboard/admin/:path*', '/dashboard/admin', '/auth/login'],
+  matcher: [
+    '/dashboard/admin/:path*', 
+    '/dashboard/admin', 
+    '/dashboard/rides/:path*', 
+    '/dashboard/rides', 
+    '/auth/login'
+  ],
 };
-
 
 // import { NextResponse } from 'next/server';
 // import type { NextRequest } from 'next/server';

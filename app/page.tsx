@@ -3,7 +3,7 @@
 import Support from "@/components/support";
 import Image from "next/image"
 import Link from "next/link"
-import { Phone } from "lucide-react"
+import { Phone, Search, MapPin } from "lucide-react"
 import { Book, CreditCard, Flag } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,6 +14,16 @@ interface FeatureItemProps {
   icon: React.ReactNode
   title: string
   description: string
+}
+
+interface Station {
+  id: number;
+  name: string;
+  station_address: string;
+  station_latitude: string;
+  station_longitude: string;
+  image_url: string;
+  is_bus_stop: boolean;
 }
 
 const FeatureItem: React.FC<FeatureItemProps> = ({ icon, title, description }) => (
@@ -27,11 +37,36 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ icon, title, description }) =
 )
 
 export default function Home() {
-
   const [location, setLocation] = useState("");
-  const [isLocationEditable, setIsLocationEditable] = useState(false);
+  const [isLocationEditable, setIsLocationEditable] = useState(true);
   const [error, setError] = useState("");
+  const [stations, setStations] = useState<Station[]>([]);
+  const [filteredStations, setFilteredStations] = useState<Station[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showStationsList, setShowStationsList] = useState(false);
 
+  // Fetch all stations on component mount
+  useEffect(() => {
+    async function fetchStations() {
+      try {
+        const response = await fetch('/api/stations');
+        if (!response.ok) {
+          throw new Error('Failed to fetch stations');
+        }
+        const data = await response.json();
+        setStations(data);
+        // Show first 5 stations by default
+        setFilteredStations(data.slice(0, 5));
+      } catch (err) {
+        console.error("Error fetching stations:", err);
+        setError("Failed to load stations. Please try again later.");
+      }
+    }
+
+    fetchStations();
+  }, []);
+
+  // Get user location if available
   useEffect(() => {
     if (!navigator.geolocation) {
       setError("Geolocation is not supported by your browser.");
@@ -48,23 +83,48 @@ export default function Home() {
           );
           const data = await response.json();
           setLocation(data.display_name || "Location not found");
+          setIsLocationEditable(false);
         } catch (err) {
           console.error("Error fetching location:", err);
           setError("Failed to fetch location address.");
         }
       },
       (positionError) => {
-        setError(positionError.message || "Could not retrieve location.");
+        setError("Location permission denied. Please enter location manually.");
+        setIsLocationEditable(true);
+        if (positionError){
+          return
+        }
+        if (isLocationEditable){
+          return
+        }
       }
     );
-  }, []);
+  }, [isLocationEditable]);
 
+  // Handle location search and show stations
   const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLocation(e.target.value);
+    const value = e.target.value;
+    setLocation(value);
+    setSearchQuery(value);
+    
+    // Filter stations based on search
+    if (value.trim()) {
+      const results = stations.filter(station => 
+        station.name.toLowerCase().includes(value.toLowerCase()) ||
+        station.station_address.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredStations(results.slice(0, 5));
+      setShowStationsList(true);
+    } else {
+      setFilteredStations(stations.slice(0, 5));
+      setShowStationsList(false);
+    }
   };
 
-  const toggleLocationEdit = () => {
-    setIsLocationEditable(!isLocationEditable);
+  const selectStation = (station: Station) => {
+    setLocation(station.name);
+    setShowStationsList(false);
   };
 
   return (
@@ -85,33 +145,57 @@ export default function Home() {
               Wondering the cost of transportation from anywhere to anywhere?
             </h3>
             <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                {isLocationEditable ? (
+              <div className="relative">
+                <div className="flex items-center space-x-2">
                   <Input
-                    placeholder="Enter pickup location"
+                    placeholder="Search for a station"
                     value={location}
                     onChange={handleLocationChange}
-                    className="flex-1"
+                    className="flex-1 pr-10"
                   />
-                ) : (
-                  <Input
-                    placeholder="Enter pickup location"
-                    value={location}
-                    readOnly
-                    className="flex-1 cursor-not-allowed"
-                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <Search className="h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
+                
+                {showStationsList && filteredStations.length > 0 && (
+                  <div className="absolute z-10 w-full bg-white mt-1 border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                    <ul>
+                      {filteredStations.map((station) => (
+                        <li 
+                          key={station.id}
+                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
+                          onClick={() => selectStation(station)}
+                        >
+                          <MapPin className="h-4 w-4 mr-2 text-pink-500" />
+                          <div>
+                            <div className="font-medium">{station.name}</div>
+                            {station.station_address && (
+                              <div className="text-sm text-gray-500">{station.station_address}</div>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                      {stations.length > 5 && (
+                        <li className="px-4 py-2 text-center">
+                          <Link href="/stations" className="text-pink-500 hover:text-pink-700">
+                            View all stations
+                          </Link>
+                        </li>
+                      )}
+                    </ul>
+                  </div>
                 )}
-                <Button
-                  variant="outline"
-                  onClick={toggleLocationEdit}
-                  className="px-3"
-                >
-                  {isLocationEditable ? "Save" : "Edit"}
-                </Button>
               </div>
+              
               {error && <p className="text-red-500 text-sm">{error}</p>}
-              <Input placeholder="Enter destination" />
-              <Button className="w-full bg-pink-500 hover:bg-pink-600">Check Now</Button>
+              
+              <Button 
+                onClick={() => setShowStationsList(!showStationsList)} 
+                className="w-full bg-pink-500 hover:bg-pink-600"
+              >
+                Find Stations Near Me
+              </Button>
             </div>
           </div>
         </section>
@@ -124,7 +208,21 @@ export default function Home() {
               <p className="text-gray-600 mb-6">
                 Our fare system for trotros and taxis is available at over 48 stations points throughout Ghana. Reaching more towns and stations.
               </p>
-              <Input placeholder="Enter location" className="mb-6" />
+              <div className="relative mb-6">
+                <Input 
+                  placeholder="Enter location" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <Search className="h-4 w-4 text-gray-400" />
+                </div>
+              </div>
+              <Link href="/stations">
+                <Button className="w-full bg-pink-500 hover:bg-pink-600 mb-6">
+                  View All Stations
+                </Button>
+              </Link>
               <p className="text-sm text-gray-600">
                 App on when looking for a partner! You can also find all TROTROS and TAXIS issuing offices in our app.
               </p>
@@ -176,8 +274,6 @@ export default function Home() {
             </div>
           </div>
 
-
-        {/* Features */}
           <div className="p-10">
             <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
               <FeatureItem
@@ -197,15 +293,13 @@ export default function Home() {
               />
             </div>
           </div>
-
         </section>
 
         {/* Support Section */}
         <Support />
-
       </main>
 
-      {/* Footer */}
+      {/* Footer - remains unchanged */}
       <footer className="bg-white py-12 border-t">
         <div className="container mx-auto px-4 grid md:grid-cols-4 gap-8">
           <div>
