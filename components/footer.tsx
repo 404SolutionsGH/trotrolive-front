@@ -8,24 +8,15 @@ const footer = () => {
           <div>
             <h3 className="font-semibold mb-4">Our Mission</h3>
             <p className="text-sm text-gray-600">
-              Lorem ipsum is simply dummy text of the printing and typesetting industry. Lorem ipsum has been the
+             We are making information readily available for trotro, taxi, okada, and all traditional public transport in Africa.
             </p>
           </div>
           <div>
             <h3 className="font-semibold mb-4">Services</h3>
             <ul className="space-y-2 text-sm text-gray-600">
-              <li>Pick a ride</li>
-              <li>Find missing item</li>
-              <li>Live station</li>
-            </ul>
-          </div>
-          <div>
-            <h3 className="font-semibold mb-4">Quick Links</h3>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li>Home</li>
-              <li>Services</li>
-              <li>About Us</li>
-              <li>Contact Us</li>
+              <li>Open Data</li>
+              <li>Web3</li>
+              <li>Trotro Pay</li>
             </ul>
           </div>
           <div>
@@ -33,9 +24,9 @@ const footer = () => {
             <div className="space-y-2 text-sm text-gray-600">
               <p className="flex items-center gap-2">
                 <Phone className="w-4 h-4" />
-                0245 985 764
+                +233 50910 3721
               </p>
-              <p>info@trotro.ai</p>
+              <p>info@trotro.live</p>
             </div>
           </div>
         </div>

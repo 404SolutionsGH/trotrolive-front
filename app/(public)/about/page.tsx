@@ -3,89 +3,94 @@ import { Button } from "@/components/ui/button";
 import Support from "../../../components/support";
 import { TeamCard } from "@/components/team-card";
 import { StatCard } from "@/components/stat-card";
+import { SiteHeader } from "@/components/site-header"; // Import the SiteHeader component
 import aboutHero from "../../../public/assets/about-hero.png";
-import Godfred from "../../../public/assets/godfredAddai.png"
-import Hilda from "../../../public/assets/hildaAmoah.png"
-import Baba from "../../../public/assets/baba-abdul.png"
-import Nana from "../../../public/assets/nana-asamoah.png"
-
+import Godfred from "../../../public/assets/godfredAddai.png";
+import Hilda from "../../../public/assets/hildaAmoah.png";
+import Baba from "../../../public/assets/baba-abdul.png";
+import Nana from "../../../public/assets/nana-asamoah.png";
 
 const About = () => {
   return (
     <div className="bg-white">
+      {/* Include the SiteHeader */}
+      <SiteHeader />
+
       {/* Hero Section */}
       <section className="bg-[#FFF8F0] pt-16">
         <div className="container mx-auto grid lg:grid-cols-2 gap-8 p-10 items-center">
           <div>
             <h1 className="text-7xl lg:text-5xl font-bold text-[#0A2342] mb-4">
-              We build bridges between stations and passengers
+              We build bridges between passengers, drivers, and station masters
             </h1>
           </div>
           <div>
             <p className="text-[#4A5568] mb-5">
-              Lorem ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry&apos;s standard dummy text ever since the
+              At Trotro.Live, we aim to revolutionize public transportation in Ghana and beyond by fostering connections and improving efficiency in the trotro ecosystem.
             </p>
           </div>
         </div>
       </section>
 
-        <div className="w-full pb-10">
-          <Image
-            src={aboutHero}
-            alt="Team collaboration"
-            width={600}
-            height={300}
-            className="w-full"
-          />
-        </div>
-
+      <div className="w-full pb-10">
+        <Image
+          src={aboutHero}
+          alt="Team collaboration"
+          width={600}
+          height={300}
+          className="w-full"
+        />
+      </div>
 
       <hr className="w-[90%] mx-auto border-gray-500 mt-10 pt-5" />
 
-      {/* Together we are strong Section */}
+      {/* DAO System Section */}
       <section className="py-16">
         <div className="container mx-auto">
           <div className="grid lg:grid-cols-2 gap-8 items-center mb-12">
             <div className="w-[50%]">
               <h2 className="text-5xl font-bold text-[#0A2342] mb-4">
-                Together we are strong
+                Empowering through transparency
               </h2>
             </div>
             <div>
               <p className="text-[#4A5568] mb-6">
-                Our crew is always getting bigger, but we all work toward one goal: to make transportation success and possible everywhere.
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut et massa mi. Aliquam in hendrerit urna. Pellentesque sit amet sapien fringilla, mattis ligula consectetur, ultrices mauris. Maecenas vitae mattis tellus. Nullam quis imperdiet augue. Vestibulum auctor ornare leo, non suscipit magna interdum eu.
+                The Trotro.Live App improves price transparency and reduces information asymmetry between passengers and drivers. This leads to efficient fare negotiations, reducing overcharging and disputes. Our peer-to-peer parcel sending service enables faster and more convenient deliveries, benefiting businesses and individuals alike.
+              </p>
+              <p className="text-[#4A5568] mb-6">
+                Users who contribute valuable trotro data, such as fares and routes, earn tokens, fostering a decentralized and community-driven ecosystem.
               </p>
             </div>
-            <div className="py-16">
-              <div className="flex items-center gap-4">
-                <Image
-                  src={Godfred}
-                  alt="Godfred Addai"
-                  width={48}
-                  height={48}
-                  className="rounded-full"
-                />
-                <div>
-                  <p className="font-semibold text-[#0A2342]">Godfred Addai</p>
-                  <p className="text-sm text-[#4A5568]">Founder & CEO</p>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <blockquote className="text-xl font-medium text-[#0A2342]">
-                &quot;Our goal is to build systems that give passengers and stations the ability to create fruitful and enduring relations with each other&quot;
-              </blockquote>
-            </div>
+            <Image
+              src="/assets/alxo.png"
+              alt="Economic Impact"
+              width={600}
+              height={300}
+              className="w-full"
+            />
           </div>
 
-          <hr className="w-[90%] mx-auto border-gray-300 mt-10 py-10" />
+          <blockquote className="text-xl font-medium text-[#0A2342]">
+            &quot;In five years, we aim to digitalize transportation information nationwide, with an efficient, well-monitored Peer-to-Peer parcel sending system,&quot; says Godfred Addai Amoako, Founder and CEO of Trotro.Live.
+          </blockquote>
+        </div>
+      </section>
 
+      <hr className="w-[90%] mx-auto border-gray-300 mt-10 py-10" />
+
+      {/* Economic Impact Section */}
+      <section className="py-16">
+        <div className="container mx-auto">
+          <h2 className="text-4xl font-bold text-[#0A2342] mb-12">
+            Driving economic growth
+          </h2>
+          <p className="text-[#4A5568] mb-6">
+            By creating employment opportunities and stimulating economic activity in logistics and e-commerce, Trotro.Live contributes to economic growth. Our platform saves time and costs for passengers and businesses alike.
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <StatCard value="402+" description="It has survived not only five centuries, but also the leap into electronic typesetting." />
-            <StatCard value="368+" description="It has survived not only five centuries, but also the leap into electronic typesetting." />
-            <StatCard value="11K+" description="It has survived not only five centuries, but also the leap into electronic typesetting." />
+            <StatCard value="1402+" description="Routes and fares digitized for transparency." />
+            <StatCard value="8+" description="Successful peer-to-peer parcel deliveries." />
+            <StatCard value="9K+" description="Active users in past demos." />
           </div>
         </div>
       </section>
@@ -119,26 +124,30 @@ const About = () => {
             />
           </div>
         </div>
-      {/* </section> */}
+      </section>
 
       <hr className="w-[90%] mx-auto bg-[#FFF0F7] border-gray-300 mt-16 pb-16" />
 
-      {/* Join Team Section */}
-      {/* <section className="py-16 bg-[#FFF0F7]"> */}
+      {/* Support Section */}
+      <section className="py-16 bg-[#FFF0F7]">
         <div className="container mx-auto">
           <div className="grid lg:grid-cols-2 gap-8">
             <div className="justify-left">
               <h2 className="text-4xl font-bold text-[#0A2342] mb-4">
-                Join our team
+                Supported by
               </h2>
+              <p className="text-[#4A5568] mb-6">
+                We are proudly supported by ALX Ventures, EU Digilogic, and GPRTU, who share our vision of transforming public transportation in Ghana.
+              </p>
             </div>
             <div className="justify-right">
-              <p className="text-[#4A5568] mb-6">
-                We believe it takes great people to make a great product. That&apos;s why we hire not only the perfect professional, but people who embody our company&apos;s values.
-              </p>
-              <Button variant="link" className="text-[#D6246E] p-0">
-                See open positions →
-              </Button>
+              <Image
+                src="/assets/supportedlogos.png"
+                alt="Support logos"
+                width={400}
+                height={200}
+                className="w-full"
+              />
             </div>
           </div>
         </div>
