@@ -187,7 +187,7 @@ export default function Home() {
           </div>
         </section>
         {/* App Promotion */}
-        <section id="services" className="bg-gradient-to-r from-yellow-50 via-pink-50 to-pink-100 py-16">
+        <section id="web3" className="bg-gradient-to-r from-yellow-50 via-pink-50 to-pink-100 py-16">
           <div className="container mx-auto px-4 grid md:grid-cols-2 gap-8 items-center">
             <Image
               src='/assets/trotrodao.jpeg'

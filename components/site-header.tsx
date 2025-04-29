@@ -50,7 +50,7 @@ export function SiteHeader() {
         <div className="flex items-center ml-12 scale-75">
           <Link href="/" prefetch={true} className="font-bold">
             <Image
-              src="https://i.imgur.com/4TKFM6L.png"
+              src="assets/logo.png"
               alt="Logo"
               unoptimized={true}
               width={50}
@@ -64,14 +64,14 @@ export function SiteHeader() {
           <Link href="/" prefetch={true} className="hover:text-primary">
             Home
           </Link>
-          <Link href="/services" prefetch={true} className="hover:text-primary">
-            Services
+          <Link href="/#web3" prefetch={false} className="hover:text-primary">
+            Web3
           </Link>
-          <Link href="/contact" prefetch={true} className="hover:text-primary">
+          <Link href="/#contact" prefetch={false} className="hover:text-primary">
             Contact us
           </Link>
           <Link href="/about" prefetch={true} className="hover:text-primary">
-            About us
+            Who We Are
           </Link>
         </nav>
 
@@ -96,7 +96,7 @@ export function SiteHeader() {
           ) : (
             <Link href="/auth/sign-up" prefetch={true}>
               <Button variant="secondary" size='lg' className="bg-pink-100 text-xl mr-4 text-pink-800 hover:bg-pink-200">
-                Join Us
+                Join Us Now
               </Button>
             </Link>
           )}
@@ -131,18 +131,18 @@ export function SiteHeader() {
                 Home
               </Link>
               <Link 
-                href="/services" 
+                href="/#web3" 
                 className="hover:text-primary py-2"
                 onClick={handleClickOutside}
-                prefetch={true}
+                prefetch={false}
               >
-                Services
+                Web3
               </Link>
               <Link 
-                href="/contact" 
+                href="/#contact" 
                 className="hover:text-primary py-2"
                 onClick={handleClickOutside}
-                prefetch={true}
+                prefetch={false}
               >
                 Contact us
               </Link>
