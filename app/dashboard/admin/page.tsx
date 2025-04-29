@@ -295,7 +295,7 @@ export default function Admin() {
             </div>
             <div className="text-4xl font-bold">
               {activeWallet 
-                ? `${activeWalletType === 'native' ? 'GH₵' : 'ETH'} ${activeWallet.balance}` 
+                ? `${activeWalletType === 'native' ? 'GH₵' : 'SOL'} ${activeWallet.balance}` 
                 : "No wallet available"
               }
             </div>

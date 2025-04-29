@@ -26,7 +26,7 @@ export const mockWallets = [
       id: 2,
       amount: "0.5",
       transaction_type: "DEPOSIT",
-      description: "ETH deposit from external wallet",
+      description: "SOL deposit from external wallet",
       created_at: "2025-04-11T12:20:30Z",
       wallet_type: "crypto"
     },
