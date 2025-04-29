@@ -10,7 +10,7 @@ const Support = () => {
             <div>
               <h1 className="text-7xl font-extrabold mb-6">Have a question? Our team is happy to assist you</h1>
               <p className="text-gray-600 mb-6 py-10">
-                Ask about Trotro.ai product, implementation or anything else. Our highly trained reps are standing by, ready to help.
+                Ask about TrotroLive  product, implementation or anything else. Our highly trained reps are standing by, ready to help.
               </p>
               <hr className="border-black mb-8"/>
               <div className="flex gap-4 items-center py-5">

@@ -13,17 +13,18 @@ export const axiosInstance = axios.create({
   withCredentials: true, // Include cookies in requests
 });
 
-
 axiosInstance.interceptors.request.use(
   (config) => {
     if (config.url?.includes('/auth/login/')) {
       return config;
     }
 
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Retrieve Civic JWT
+    const civicJwt = localStorage.getItem('civic_jwt');
+    if (civicJwt) {
+      config.headers.Authorization = `Bearer ${civicJwt}`;
     }
+
     return config;
   },
   (error) => {
@@ -31,23 +32,26 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-axiosInstance.interceptors.request.use(config => {
-  console.log('Axios Request Config:');
-  console.log('URL:', config.url);
-  console.log('Method:', config.method);
-  console.log('Headers:', config.headers);
+axiosInstance.interceptors.request.use(
+  (config) => {
+    console.log('Axios Request Config:');
+    console.log('URL:', config.url);
+    console.log('Method:', config.method);
+    console.log('Headers:', config.headers);
 
-  // Add CSRF token
-  const csrfToken = Cookies.get('csrftoken');
-  if (csrfToken) {
+    // Add CSRF token
+    const csrfToken = Cookies.get('csrftoken');
+    if (csrfToken) {
       config.headers['X-CSRFToken'] = csrfToken;
-  }
+    }
 
-  return config;
-}, error => {
-  console.error('Axios Request Error:', error);
-  return Promise.reject(error);
-});
+    return config;
+  },
+  (error) => {
+    console.error('Axios Request Error:', error);
+    return Promise.reject(error);
+  }
+);
 
 // Response Interceptor: Handle 401 errors and refresh tokens
 axiosInstance.interceptors.response.use(
@@ -65,14 +69,14 @@ axiosInstance.interceptors.response.use(
         });
 
         const newAccessToken = data.access;
-        localStorage.setItem('access_token', newAccessToken);
+        localStorage.setItem('civic_jwt', newAccessToken);
 
         // Retry the failed request with the new token
         error.config.headers.Authorization = `Bearer ${newAccessToken}`;
         return axiosInstance(error.config);
       } catch (refreshError) {
         console.error('Token refresh failed:', refreshError);
-        localStorage.removeItem('access_token');
+        localStorage.removeItem('civic_jwt');
         localStorage.removeItem('refresh_token');
         window.location.href = '/auth/login'; // Redirect to login
         return Promise.reject(refreshError);
