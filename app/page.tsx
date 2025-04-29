@@ -235,7 +235,7 @@ export default function Home() {
         </section>
 
         {/* App Promotion */}
-        <section className="bg-gradient-to-r from-yellow-50 via-pink-50 to-pink-100 py-16">
+        <section id="services" className="bg-gradient-to-r from-yellow-50 via-pink-50 to-pink-100 py-16">
           <div className="container mx-auto px-4 grid md:grid-cols-2 gap-8 items-center">
             <Image
               src='/assets/phone.svg'

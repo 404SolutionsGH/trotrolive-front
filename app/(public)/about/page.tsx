@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import Support from "../../../components/support";
 import { TeamCard } from "@/components/team-card";
 import { StatCard } from "@/components/stat-card";
@@ -10,7 +9,7 @@ import Hilda from "../../../public/assets/hildaAmoah.png";
 import Baba from "../../../public/assets/baba-abdul.png";
 import Nana from "../../../public/assets/nana-asamoah.png";
 
-const About = () => {
+export const About = () => {
   return (
     <div className="bg-white">
       {/* Include the SiteHeader */}
@@ -157,5 +156,3 @@ const About = () => {
     </div>
   );
 };
-
-export default About;
