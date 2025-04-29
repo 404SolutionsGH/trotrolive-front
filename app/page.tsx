@@ -9,6 +9,8 @@ import { Book, CreditCard, Flag } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { stations, trips } from "@/data/dummy-data"; // Import dummy data
 
 interface FeatureItemProps {
   icon: React.ReactNode;
@@ -30,6 +32,9 @@ export default function Home() {
   const [location, setLocation] = useState("");
   const [isLocationEditable, setIsLocationEditable] = useState(false);
   const [error, setError] = useState("");
+  const [startStation, setStartStation] = useState("");
+  const [destinationStation, setDestinationStation] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -66,13 +71,36 @@ export default function Home() {
     setIsLocationEditable(!isLocationEditable);
   };
 
+  const handleCheckFare = () => {
+    if (!startStation || !destinationStation) {
+      alert("Please select both start and destination stations.");
+      return;
+    }
+
+    // Check if a matching trip exists
+    const matchingTrip = trips.find(
+      (trip) =>
+        trip.start_station.id.toString() === startStation &&
+        trip.destination.id.toString() === destinationStation
+    );
+
+    if (matchingTrip) {
+      // Redirect to the trips page with query parameters
+      router.push(
+        `/trips?start=${startStation}&destination=${destinationStation}`
+      );
+    } else {
+      alert("No trips found for the selected stations.");
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-1">
         {/* Hero Section */}
         <section className="relative">
           <Image
-            src='/assets/home-hero.svg'
+            src='/assets/circle.jpeg'
             alt="Person in car"
             width={1200}
             height={600}
@@ -84,37 +112,46 @@ export default function Home() {
             </h3>
             <div className="space-y-4">
               <div className="flex flex-col space-y-2">
-          <label htmlFor="start-station" className="text-sm font-medium">
-            Start Station
-          </label>
-          <select
-            id="start-station"
-            className="flex-1 border border-gray-300 rounded-lg p-2"
-          >
-            <option value="">Select your start station</option>
-            {/* Render stations sorted by proximity */}
-            <option value="station1">Station 1</option>
-            <option value="station2">Station 2</option>
-            <option value="station3">Station 3</option>
-          </select>
+                <label htmlFor="start-station" className="text-sm font-medium">
+                  Start Station
+                </label>
+                <select
+                  id="start-station"
+                  className="flex-1 border border-gray-300 rounded-lg p-2"
+                  value={startStation}
+                  onChange={(e) => setStartStation(e.target.value)}
+                >
+                  <option value="">Select your start station</option>
+                  {stations.map((station) => (
+                    <option key={station.id} value={station.id}>
+                      {station.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="flex flex-col space-y-2">
-          <label htmlFor="destination-station" className="text-sm font-medium">
-            Destination Station
-          </label>
-          <select
-            id="destination-station"
-            className="flex-1 border border-gray-300 rounded-lg p-2"
-          >
-            <option value="">Select your destination station</option>
-            {/* Render all stations */}
-            <option value="station1">Station 1</option>
-            <option value="station2">Station 2</option>
-            <option value="station3">Station 3</option>
-          </select>
+                <label htmlFor="destination-station" className="text-sm font-medium">
+                  Destination Station
+                </label>
+                <select
+                  id="destination-station"
+                  className="flex-1 border border-gray-300 rounded-lg p-2"
+                  value={destinationStation}
+                  onChange={(e) => setDestinationStation(e.target.value)}
+                >
+                  <option value="">Select your destination station</option>
+                  {stations.map((station) => (
+                    <option key={station.id} value={station.id}>
+                      {station.name}
+                    </option>
+                  ))}
+                </select>
               </div>
-              <Button className="w-full bg-pink-500 hover:bg-pink-600">
-          Check Fare Now
+              <Button
+                className="w-full bg-pink-500 hover:bg-pink-600"
+                onClick={handleCheckFare}
+              >
+                Check Fare Now
               </Button>
             </div>
           </div>
@@ -161,9 +198,9 @@ export default function Home() {
             />
             <div>
               <h1 className="text-7xl font-extrabold mb-6">Introducing Trotro DAO: The Future of Transportation</h1>
-                <p className="text-gray-600 mb-6">
-              Trotro.Live leverages blockchain and DAO principles to revolutionize transportation in Ghana. By contributing fare data, commuters can earn tokens as rewards. Additionally, participants can engage in voting and civic conversations on Trotro affairs, empowering them to shape the future of mobility.
-              </p>
+              <p className="text-gray-600 mb-6">
+            Trotro.Live leverages blockchain and DAO principles to revolutionize transportation in Ghana. By decentralizing decision-making and empowering commuters, we aim to create a more efficient and transparent transportation ecosystem. Join us in shaping the future of mobility.
+          </p>
               <Button className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-lg shadow-lg">
           Learn More
               </Button>
