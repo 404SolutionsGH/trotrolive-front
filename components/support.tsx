@@ -1,7 +1,7 @@
-import Link from 'next/link'
+// import Link from 'next/link'
 import Image from "next/image"
 import contact from "../public/assets/pexels-picha-stock-3894377 1.jpg"
-import { Button } from "@/components/ui/button"
+// import { Button } from "@/components/ui/button"
 
 const Support = () => {
   return (
@@ -13,7 +13,7 @@ const Support = () => {
                 Ask about TrotroLive  product, implementation or anything else. Our highly trained reps are standing by, ready to help.
               </p>
               <hr className="border-black mb-8"/>
-              <div className="flex gap-4 items-center py-5">
+              {/* <div className="flex gap-4 items-center py-5">
                 <Button className="bg-pink-500 hover:bg-pink-600">Contact Us</Button>
                 <div className="flex items-center gap-2">
                   <span>or call</span>
@@ -21,7 +21,7 @@ const Support = () => {
                     0556 516 391
                   </Link>
                 </div>
-              </div>
+              </div> */}
             </div>
             <Image
               src={contact}

@@ -74,3 +74,60 @@ export const trips = [
     route: "Under Bridge to Bus Stop",
   },
 ];
+
+const transportTypes = ["trotro", "okada", "taxi"];
+
+function getRandomFare() {
+  return (Math.floor(Math.random() * 9500) / 100 + 5).toFixed(2);
+}
+
+// Helper function to get a random transport type
+function getRandomTransportType() {
+  return transportTypes[Math.floor(Math.random() * transportTypes.length)];
+}
+
+export function generateAllPossibleTrips() {
+  const allTrips = [];
+  let tripId = 1;
+
+  // Generate all possible combinations of start and destination stations
+  for (let i = 0; i < stations.length; i++) {
+    for (let j = 0; j < stations.length; j++) {
+      // Skip if start and destination are the same
+      if (i === j) continue;
+
+      const startStation = stations[i];
+      const destStation = stations[j];
+      
+      // Check if this trip already exists in the original trips data
+      const existingTrip = trips.find(
+        trip => 
+          trip.start_station.id === startStation.id && 
+          trip.destination.id === destStation.id
+      );
+      
+      if (existingTrip) {
+        // Use existing trip data
+        allTrips.push({
+          ...existingTrip,
+          id: tripId++
+        });
+      } else {
+        // Create a new trip with random transport type and fare
+        const transportType = getRandomTransportType();
+        const fare = getRandomFare();
+        
+        allTrips.push({
+          id: tripId++,
+          start_station: { id: startStation.id, name: startStation.name },
+          destination: { id: destStation.id, name: destStation.name },
+          transport_type: transportType,
+          fare: fare,
+          route: `${startStation.name} to ${destStation.name}`
+        });
+      }
+    }
+  }
+
+  return allTrips;
+}
