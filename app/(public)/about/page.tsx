@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
+// Removed unused Button import
 import Support from "../../../components/support";
 import { TeamCard } from "@/components/team-card";
 import { StatCard } from "@/components/stat-card";
@@ -157,3 +157,5 @@ const About = () => {
     </div>
   );
 };
+
+export default About; // Ensure About is exported

@@ -4,8 +4,7 @@ import {
   AuthState,
   LoginCredentials,
   RegisterData,
-  AuthResponse,
-} from '@/app/features/auth/types';
+} from '@/app/features/auth/types'; // Removed AuthResponse
 import { getCsrfToken } from '@/app/features/auth/api';
 import Cookies from 'js-cookie';
 
@@ -20,8 +19,8 @@ const initialState: AuthState = {
 const cookieOptions = {
   expires: 7, // 7 days
   secure: process.env.NODE_ENV === 'development',
-  sameSite: 'lax' as 'lax',
-  path: '/'
+  sameSite: 'lax' as const, // Fixed type assertion
+  path: '/',
 };
 
 // Helper functions for token management

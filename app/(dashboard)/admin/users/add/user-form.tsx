@@ -1,4 +1,4 @@
-"use client"
+/* "use client"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -15,7 +15,7 @@ export function UserForm() {
         <Input id="password" type="password" />
       </div>
 
-      {/* Last Login Section */}
+      {/* Last Login Section }
       <div className="grid gap-2">
         <Label>Last Login:</Label>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -45,7 +45,7 @@ export function UserForm() {
         </span>
       </div>
 
-      {/* User Permissions Section */}
+      {/* User Permissions Section }
       <div className="grid gap-2">
         <Label>User Permissions</Label>
         <div className="space-y-2">
@@ -67,7 +67,7 @@ export function UserForm() {
         </div>
       </div>
 
-      {/* Staff Status Section */}
+      {/* Staff Status Section }
       <div className="grid gap-2">
         <Label>Staff Status</Label>
         <div className="flex items-center gap-2">
@@ -79,7 +79,7 @@ export function UserForm() {
         </p>
       </div>
 
-      {/* Date Joined Section */}
+      {/* Date Joined Section }
       <div className="grid gap-2">
         <Label>Date Joined:</Label>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -109,7 +109,7 @@ export function UserForm() {
         </span>
       </div>
 
-      {/* User Type Section */}
+      {/* User Type Section }
       <div className="grid gap-2">
         <Label>User Type</Label>
         <RadioGroup defaultValue="basic-user">
@@ -128,7 +128,7 @@ export function UserForm() {
         </RadioGroup>
       </div>
 
-      {/* Avatar Section */}
+      {/* Avatar Section }
       <div className="grid gap-2">
         <Label>Avatar</Label>
         <div className="flex items-center gap-4">
@@ -137,7 +137,7 @@ export function UserForm() {
         </div>
       </div>
 
-      {/* Basic Information Section */}
+      {/* Basic Information Section }
       <div className="grid gap-2">
         <Label htmlFor="name">Name:</Label>
         <Input id="name" />
@@ -151,13 +151,13 @@ export function UserForm() {
         <Input id="gps" />
       </div>
 
-      {/* Verification Section */}
+      {/* Verification Section }
       <div className="flex items-center gap-2">
         <Checkbox id="verified" />
         <Label htmlFor="verified">Is Verified</Label>
       </div>
 
-      {/* Form Actions */}
+      {/* Form Actions }
       <div className="flex gap-2">
         <Button className="bg-[#D81B60] text-white hover:bg-[#C2185B]">Save and add another</Button>
         <Button className="bg-[#D81B60] text-white hover:bg-[#C2185B]">Save and continue editing</Button>
@@ -166,3 +166,4 @@ export function UserForm() {
     </div>
   )
 }
+*/
