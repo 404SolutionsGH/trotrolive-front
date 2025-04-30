@@ -13,7 +13,7 @@ import { SiteHeader } from "@/components/site-header";
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isClient, setIsClient] = useState(false);
   const clientId = process.env.NEXT_PUBLIC_CIVIC_CLIENT_ID;
-  const endpoint = "https://api.devnet.solana.com";
+  const endpoint = "https://api.mainnet-beta.solana.com";
 
   useEffect(() => {
     setIsClient(true);
