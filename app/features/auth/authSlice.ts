@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { authApi, ApiError } from '@/app/features/auth/api';
+import { authApi, ApiError, refreshAccessToken } from '@/app/features/auth/api';
 import {
   AuthState,
   LoginCredentials,
@@ -139,9 +139,9 @@ export const refreshToken = createAsyncThunk(
         throw new Error('No refresh token available');
       }
 
-      const response = await authApi.refreshToken(refreshToken);
+      const response = await refreshAccessToken(refreshToken);
 
-      if (response.access) {
+      if (response && response.access) {
         Cookies.set('access_token', response.access, cookieOptions);
       }
 

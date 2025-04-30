@@ -68,12 +68,7 @@ export default function Home() {
             <h3 className="text-2xl font-extrabold mb-6">
               Select your start and destination stations to check your fare now!
             </h3>
-            <p>
-              Its easy to plan your trip with Trotro.Live data fare by GPRTU and People.
-            </p>
-            <p>
-              Trotro.Live leverages blockchain and DAO principles to revolutionize transportation in Ghana. By decentralizing decision-making and empowering commuters, we aim to create a more efficient and transparent transportation ecosystem. Join us in shaping the future of mobility.
-            </p>
+        
             <div className="space-y-4">
               <div className="flex flex-col space-y-2">
                 <label htmlFor="start-station" className="text-sm font-medium">
@@ -151,7 +146,7 @@ export default function Home() {
           </div>
         </section>
         {/* App Promotion */}
-        <section id="services" className="bg-gradient-to-r from-yellow-50 via-pink-50 to-pink-100 py-16">
+        <section id="web3" className="bg-gradient-to-r from-yellow-50 via-pink-50 to-pink-100 py-16">
           <div className="container mx-auto px-4 grid md:grid-cols-2 gap-8 items-center">
             <Image
               src='/assets/trotrodao.jpeg'

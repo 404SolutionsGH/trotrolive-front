@@ -42,7 +42,7 @@ export default function TripsPage() {
                   <td className="border border-gray-300 p-3">{trip.start_station.name}</td>
                   <td className="border border-gray-300 p-3">{trip.destination.name}</td>
                   <td className="border border-gray-300 p-3">GHS {trip.fare}</td>
-                  <td className="border border-gray-300 p-3">{trip.transport_type_display}</td>
+                  <td className="border border-gray-300 p-3">{trip.transport_type}</td>
                   <td className="border border-gray-300 p-3">{trip.route}</td>
                 </tr>
               ))}
@@ -54,6 +54,11 @@ export default function TripsPage() {
           </p>
         )}
       </main>
+
+      {/* Disclaimer */}
+      <div className="text-center text-xs text-gray-500 mb-4">
+        Disclaimer: Trip results are dummy data and for demo purposes only.
+      </div>
 
       {/* Footer */}
       <Footer />
