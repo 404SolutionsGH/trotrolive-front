@@ -1,55 +1,121 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Here’s a **clean, focused `README.md` just for the Trotro.Live Frontend**, including installation and setup instructions:
 
-## Getting Started
+---
 
-First, run the development server:
+# 🚐 Trotro.Live Frontend
+
+**Digitising Ghana’s Trotro Transport System — One Route at a Time**
+
+This is the **frontend** of [Trotro.Live]([https://trotroweb3.onrender.com/]), a web application aimed at making transportation information more accessible, efficient, and connected for over 3.5 million commuters across Accra, Kumasi, and Obuasi.
+
+Built with **Next.js**, this frontend connects to a Django backend and integrates with **Civic Pass Web3 Authentication** to enable decentralized community participation in the Trotro ecosystem.
+
+---
+
+## ⚙️ Tech Stack
+
+- **Framework**: [Next.js](https://nextjs.org)
+- **Styling**: Tailwind CSS
+- **Font**: [Geist](https://vercel.com/font)
+- **Web3 Auth**: [Civic Pass](https://www.civic.com/)
+- **API**: External Django Backend (`NEXT_PUBLIC_API_URL`)
+- **Blockchain**: Solana (DAO integration coming soon)
+
+---
+
+## 🚀 Installation
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/your-username/trotro-frontend.git
+cd trotro-frontend
+```
+
+### 2. Install Dependencies
+
+Using your preferred package manager:
+
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+# or
+bun install
+```
+
+---
+
+## 🧪 Local Development
+
+Start the development server:
 
 ```bash
 npm run dev
 # or
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🔐 Environment Variables
 
-## Update README to Include `.env` File Instructions
+Create a `.env` file in the project root with the following:
 
-### Add the `.env` File
-1. Create a `.env` file in the root directory of your project if it doesn't already exist.
-2. Add the following entry to specify the Django API URL:
-
-   ```plaintext
-   NEXT_PUBLIC_API_URL=<your_django_api_url>
-   ```
-
-   Replace `<NEXT_PUBLIC_API_URL>` with the actual URL of your Django API (e.g., `http://localhost:8000` for local development or your production URL).
-
-3. Save the file. Make sure the `.env` file is included in your `.gitignore` to prevent sensitive information from being committed to version control.
-
-### Example `.env` File
-```plaintext
+```env
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-## Learn More
+Replace the value with your actual **Django API** endpoint.
 
-To learn more about Next.js, take a look at the following resources:
+✅ **Pro Tip**: Add `.env` to your `.gitignore`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## 📦 Build for Production
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run build
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+To preview the production build locally:
+
+```bash
+npm run start
+```
+
+---
+
+## 🌐 Deployment
+
+The easiest way to deploy is with [Vercel]([https://vercel.com](https://trotroweb3.onrender.com/).  
+Push your repo and follow their steps to get it live.
+
+---
+
+## 📌 Features in Progress
+
+- ⚠️ **Civic Role Upgrade** (Drivers, Mates, Passengers, Station Masters)
+- 🔜 **Solana DAO Program** (via Anchor)
+- 🔜 **Django API Integration** for real-time transport data
+
+---
+
+## 👐 Contribute
+
+We’re open to contributions! Please fork the repo and create a PR — let’s build a better commute together.
+
+---
+
+**Trotro.Live** – Making Ghana’s transport smarter, safer, and on-chain.
+
+🚌 🇬🇭 🛠️
+
+---
+
