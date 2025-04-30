@@ -50,7 +50,7 @@ export function SiteHeader() {
         <div className="flex items-center ml-12 scale-75">
           <Link href="/" prefetch={true} className="font-bold">
             <Image
-              src="assets/logo.png"
+              src="/assets/logo.png"
               alt="Logo"
               unoptimized={true}
               width={50}
@@ -94,7 +94,7 @@ export function SiteHeader() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Link href="/auth/sign-up" prefetch={true}>
+            <Link href="/auth/login" prefetch={true}>
               <Button variant="secondary" size='lg' className="bg-pink-100 text-xl mr-4 text-pink-800 hover:bg-pink-200">
                 Join Us Now
               </Button>

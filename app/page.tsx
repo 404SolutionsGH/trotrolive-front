@@ -1,14 +1,14 @@
 'use client'
 
 import Support from "@/components/support";
-import Footer from "@/components/footer"; // Import the Footer component
+import Footer from "@/components/footer";
 import Image from "next/image";
-import { Book, CreditCard, Flag } from 'lucide-react';
+import { Book, CreditCard, Flag, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-// Removed unused useEffect import
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { stations, trips } from "@/data/dummy-data"; // Import dummy data
+import { stations, generateAllPossibleTrips } from "@/data/dummy-data";
+import Link from "next/link";
 
 interface FeatureItemProps {
   icon: React.ReactNode;
@@ -17,26 +17,70 @@ interface FeatureItemProps {
 }
 
 const FeatureItem: React.FC<FeatureItemProps> = ({ icon, title, description }) => (
-  <div className="p-6 flex flex-col items-start">
-    <div className="w-12 h-12 rounded bg-primary flex items-center justify-center mb-4">
+  <div className="p-4 md:p-6 flex flex-col items-start">
+    <div className="w-10 h-10 md:w-12 md:h-12 rounded bg-primary flex items-center justify-center mb-3 md:mb-4">
       {icon}
     </div>
-    <h2 className="text-xl font-semibold mb-2">{title}</h2>
-    <p className="text-muted-foreground">{description}</p>
+    <h2 className="text-lg md:text-xl font-semibold mb-1 md:mb-2">{title}</h2>
+    <p className="text-sm md:text-base text-muted-foreground">{description}</p>
+  </div>
+);
+
+interface ErrorCardProps {
+  message: string;
+  onClose: () => void;
+}
+
+const ErrorCard: React.FC<ErrorCardProps> = ({ message, onClose }) => (
+  <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50" onClick={onClose}>
+    <div className="bg-white rounded-lg shadow-lg p-6 max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+      <div className="flex justify-between items-start mb-4">
+        <h3 className="text-lg font-semibold text-red-600">Error</h3>
+        <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+          <X size={20} />
+        </button>
+      </div>
+      <p className="mb-4">{message}</p>
+      <div className="flex justify-end">
+        <Button onClick={onClose} className="bg-pink-500 hover:bg-pink-600">OK</Button>
+      </div>
+    </div>
   </div>
 );
 
 export default function Home() {
   const [startStation, setStartStation] = useState("");
   const [destinationStation, setDestinationStation] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [availableDestinations, setAvailableDestinations] = useState<typeof stations>([]);
   const router = useRouter();
+  
+  // Update available destinations when start station changes
+  useEffect(() => {
+    if (startStation) {
+      // Filter out the current start station from potential destinations
+      const filteredDestinations = stations.filter(
+        station => station.id.toString() !== startStation
+      );
+      setAvailableDestinations(filteredDestinations);
+      // Reset destination if it's the same as the newly selected start
+      if (destinationStation && destinationStation === startStation) {
+        setDestinationStation("");
+      }
+    } else {
+      setAvailableDestinations([]);
+    }
+  }, [startStation, destinationStation]);
 
   const handleCheckFare = () => {
     if (!startStation || !destinationStation) {
-      alert("Please select both start and destination stations.");
+      setErrorMessage("Please select both start and destination stations.");
       return;
     }
 
+    // We'll use the new generateAllPossibleTrips function to get all possible trips
+    const trips = generateAllPossibleTrips();
+    
     const matchingTrip = trips.find(
       (trip) =>
         trip.start_station.id.toString() === startStation &&
@@ -48,29 +92,36 @@ export default function Home() {
         `/trips?start=${startStation}&destination=${destinationStation}`
       );
     } else {
-      alert("No trips found for the selected stations.");
+      setErrorMessage("No trips found for the selected stations.");
     }
   };
 
   return (
     <div className="flex flex-col min-h-screen">
       <main className="flex-1">
+        {/* Error Message */}
+        {errorMessage && (
+          <ErrorCard message={errorMessage} onClose={() => setErrorMessage("")} />
+        )}
+
         {/* Hero Section */}
         <section className="relative">
-          <Image
-            src='/assets/circle.jpeg'
-            alt="Person in car"
-            width={1200}
-            height={600}
-            className="w-full h-[800px] object-cover"
-          />
-          <div className="absolute top-1/2 right-8 -translate-y-1/2 bg-white p-6 rounded-lg shadow-lg max-w-sm">
-            <h3 className="text-2xl font-extrabold mb-6">
+          <div className="w-full h-[400px] md:h-[600px] lg:h-[800px] relative">
+            <Image
+              src='/assets/circle.jpeg'
+              alt="Person in car"
+              fill
+              priority
+              className="object-cover"
+            />
+          </div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 md:left-auto md:right-8 md:translate-x-0 bg-white p-4 md:p-6 rounded-lg shadow-lg w-[90%] max-w-sm mx-auto">
+            <h3 className="text-xl md:text-2xl font-extrabold mb-4 md:mb-6">
               Select your start and destination stations to check your fare now!
             </h3>
         
-            <div className="space-y-4">
-              <div className="flex flex-col space-y-2">
+            <div className="space-y-3 md:space-y-4">
+              <div className="flex flex-col space-y-1 md:space-y-2">
                 <label htmlFor="start-station" className="text-sm font-medium">
                   Start Station
                 </label>
@@ -88,7 +139,7 @@ export default function Home() {
                   ))}
                 </select>
               </div>
-              <div className="flex flex-col space-y-2">
+              <div className="flex flex-col space-y-1 md:space-y-2">
                 <label htmlFor="destination-station" className="text-sm font-medium">
                   Destination Station
                 </label>
@@ -97,9 +148,10 @@ export default function Home() {
                   className="flex-1 border border-gray-300 rounded-lg p-2"
                   value={destinationStation}
                   onChange={(e) => setDestinationStation(e.target.value)}
+                  disabled={!startStation}
                 >
                   <option value="">Select your destination station</option>
-                  {stations.map((station) => (
+                  {availableDestinations.map((station) => (
                     <option key={station.id} value={station.id}>
                       {station.name}
                     </option>
@@ -117,71 +169,75 @@ export default function Home() {
         </section>
 
         {/* About Trotro.Live Section */}
-        <section className="grid md:grid-cols-2 items-center bg-gradient-to-br from-yellow-50 via-pink-50 to-pink-100 py-16 px-8 md:px-16">
-          <div className="max-w-lg mx-auto space-y-6">
-            <h1 className="text-5xl md:text-6xl font-extrabold text-gray-800 leading-tight">
+        <section className="grid grid-cols-1 md:grid-cols-2 items-center bg-gradient-to-br from-yellow-50 via-pink-50 to-pink-100 py-10 md:py-16 px-4 md:px-8 lg:px-16 gap-8">
+          <div className="max-w-lg mx-auto space-y-4 md:space-y-6 order-2 md:order-1">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-800 leading-tight">
               About <span className="text-pink-500">Us</span>
             </h1>
-            <p className="text-lg text-gray-700 leading-relaxed">
+            <p className="text-base md:text-lg text-gray-700 leading-relaxed">
               We are revolutionizing transportation in Ghana by making Trotro (shared minibus) information accessible to over 3.5 million commuters in Accra, Kumasi, and Obuasi.
             </p>
-            <p className="text-lg text-gray-700 leading-relaxed">
+            <p className="text-base md:text-lg text-gray-700 leading-relaxed">
               We are on a mission to digitize transportation, making it smarter, safer, and more efficient for everyone. Whether its finding fares, routes, or sending items, Trotro.Live is your go-to platform.
             </p>
-            <p className="text-lg text-gray-700 leading-relaxed">
+            <p className="text-base md:text-lg text-gray-700 leading-relaxed">
               Join us in transforming the way Ghana moves, one ride at a time.
             </p>
-            <Button className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-lg shadow-lg">
-              Learn More
+            <Button className="bg-pink-500 hover:bg-pink-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg shadow-lg">
+              <Link href='/about' prefetch={true}>
+                Learn More
+              </Link>
             </Button>
           </div>
-          <div className="relative">
+          <div className="relative w-full h-64 sm:h-80 md:h-96 order-1 md:order-2">
             <Image
               src="/assets/about.png"
               alt="About Trotro.Live"
-              width={1200}
-              height={800}
-              className="w-full h-auto object-cover rounded-lg shadow-lg"
+              fill
+              className="object-cover rounded-lg shadow-lg"
             />
           </div>
         </section>
+        
         {/* App Promotion */}
-        <section id="web3" className="bg-gradient-to-r from-yellow-50 via-pink-50 to-pink-100 py-16">
-          <div className="container mx-auto px-4 grid md:grid-cols-2 gap-8 items-center">
-            <Image
-              src='/assets/trotrodao.jpeg'
-              alt="Mobile app screenshot"
-              width={400}
-              height={800}
-              className="mx-auto"
-            />
+        <section id="web3" className="bg-gradient-to-r from-yellow-50 via-pink-50 to-pink-100 py-10 md:py-16 px-4">
+          <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            <div className="relative w-full h-64 sm:h-80 md:h-auto mx-auto max-w-xs">
+              <Image
+                src='/assets/trotrodao.jpeg'
+                alt="Mobile app screenshot"
+                width={400}
+                height={800}
+                className="mx-auto"
+              />
+            </div>
             <div>
-              <h1 className="text-7xl font-extrabold mb-6">Introducing Trotro DAO: The Future of Transportation</h1>
-              <p className="text-gray-600 mb-6">
-            Trotro.Live leverages blockchain and DAO principles to revolutionize transportation in Ghana. By decentralizing decision-making and empowering commuters, we aim to create a more efficient and transparent transportation ecosystem. Join us in shaping the future of mobility.
-          </p>
-              <Button className="bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-lg shadow-lg">
-          Learn More
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-4 md:mb-6">Introducing Trotro DAO: The Future of Transportation</h1>
+              <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6">
+                Trotro.Live leverages blockchain and DAO principles to revolutionize transportation in Ghana. By decentralizing decision-making and empowering commuters, we aim to create a more efficient and transparent transportation ecosystem. Join us in shaping the future of mobility.
+              </p>
+              <Button className="bg-pink-500 hover:bg-pink-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg shadow-lg">
+                Learn More
               </Button>
             </div>
           </div>
         </section>
 
         {/* Features */}
-        <div className="p-10">
-          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="p-4 md:p-10">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
             <FeatureItem
-              icon={<Book className="w-6 h-6 text-primary-foreground" />}
+              icon={<Book className="w-5 h-5 md:w-6 md:h-6 text-primary-foreground" />}
               title="Open Data"
               description="Station API and Trips API will be open and publicly consumable without login, enabling banks and individual projects to integrate seamlessly."
             />
             <FeatureItem
-              icon={<CreditCard className="w-6 h-6 text-primary-foreground" />}
+              icon={<CreditCard className="w-5 h-5 md:w-6 md:h-6 text-primary-foreground" />}
               title="Web 3 Community"
               description="Bringing more people on-chain by addressing local pain points of trotro through civic digital conversations. Earn Trotro tokens for approved data contributions."
             />
             <FeatureItem
-              icon={<Flag className="w-6 h-6 text-primary-foreground" />}
+              icon={<Flag className="w-5 h-5 md:w-6 md:h-6 text-primary-foreground" />}
               title="Trotro Pay"
               description="Connect your mobile money wallets to make payments directly to trotro mates and taxi drivers with ease."
             />
@@ -189,13 +245,13 @@ export default function Home() {
         </div>
 
         {/* Support Section */}
-        <section id="contact" className="py-16">
+        <section id="contact" className="py-8 md:py-16">
           <Support />
         </section>
       </main>
 
       {/* Footer */}
-      <Footer /> {/* Use the imported Footer component */}
+      <Footer />
     </div>
   );
 }
