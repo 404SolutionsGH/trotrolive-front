@@ -59,7 +59,7 @@ const ConnectionRedirect = () => {
       
       const redirectTimer = setTimeout(() => {
         // Check if there's a redirect parameter and use it
-        const redirectPath = searchParams.get('redirect') || '/dashboard/admin';
+        const redirectPath = searchParams.get('redirect') || '/';
         router.push(redirectPath);
       }, 1000);
       
