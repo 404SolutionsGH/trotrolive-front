@@ -1,6 +1,3 @@
-Here’s a **clean, focused `README.md` just for the Trotro.Live Frontend**, including installation and setup instructions:
-
----
 
 # 🚐 Trotro.Live Frontend
 
@@ -8,7 +5,7 @@ Here’s a **clean, focused `README.md` just for the Trotro.Live Frontend**, inc
 
 This is the **frontend** of [Trotro.Live]([https://trotroweb3.onrender.com/]), a web application aimed at making transportation information more accessible, efficient, and connected for over 3.5 million commuters across Accra, Kumasi, and Obuasi.
 
-Built with **Next.js**, this frontend connects to a Django backend and integrates with **Civic Pass Web3 Authentication** to enable decentralized community participation in the Trotro ecosystem.
+Built with **Next.js**, this frontend connects to a Django backend and integrates with **Civic Auth Web3 Authentication** to enable decentralized community participation in the Trotro ecosystem.
 
 ---
 
@@ -29,7 +26,7 @@ Built with **Next.js**, this frontend connects to a Django backend and integrate
 
 ```bash
 git clone https://github.com/your-username/trotro-frontend.git
-cd trotro-frontend
+cd trotro-front
 ```
 
 ### 2. Install Dependencies
@@ -94,7 +91,7 @@ npm run start
 
 ## 🌐 Deployment
 
-The easiest way to deploy is with [Vercel]([https://vercel.com](https://trotroweb3.onrender.com/).  
+The easiest way to deploy is with [TrotroLive]([Trotro.live](https://trotroweb3.onrender.com/).  
 Push your repo and follow their steps to get it live.
 
 ---
