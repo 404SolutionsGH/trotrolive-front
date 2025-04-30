@@ -1,11 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { authApi, ApiError } from '@/app/features/auth/api';
+import { authApi, ApiError, refreshAccessToken } from '@/app/features/auth/api';
 import {
   AuthState,
   LoginCredentials,
   RegisterData,
-  AuthResponse,
-} from '@/app/features/auth/types';
+} from '@/app/features/auth/types'; // Removed AuthResponse
 import { getCsrfToken } from '@/app/features/auth/api';
 import Cookies from 'js-cookie';
 
@@ -20,8 +19,8 @@ const initialState: AuthState = {
 const cookieOptions = {
   expires: 7, // 7 days
   secure: process.env.NODE_ENV === 'development',
-  sameSite: 'lax' as 'lax',
-  path: '/'
+  sameSite: 'lax' as const, // Fixed type assertion
+  path: '/',
 };
 
 // Helper functions for token management
@@ -140,9 +139,9 @@ export const refreshToken = createAsyncThunk(
         throw new Error('No refresh token available');
       }
 
-      const response = await authApi.refreshToken(refreshToken);
+      const response = await refreshAccessToken(refreshToken);
 
-      if (response.access) {
+      if (response && response.access) {
         Cookies.set('access_token', response.access, cookieOptions);
       }
 

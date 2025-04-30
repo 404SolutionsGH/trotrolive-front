@@ -7,6 +7,7 @@ export interface User {
 export interface LoginCredentials {
     email: string;
     password: string;
+    rememberMe?: boolean; // Add this property
 }
 
 export interface RegisterData {

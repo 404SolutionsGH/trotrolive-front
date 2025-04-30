@@ -1,12 +1,8 @@
-"use client";
+/*"use client";
 
-import { useState } from "react";
-import { toast, ToastContainer } from "react-toastify";
-import Cookies from "js-cookie";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export default function FundWallet() {
+/*export default function FundWallet() {
 
   const [depositAmount, setDepositAmount] = useState("");
 
@@ -65,3 +61,6 @@ export default function FundWallet() {
     </div>
   );
 }
+*/
+
+export{};

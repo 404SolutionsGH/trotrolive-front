@@ -1,4 +1,4 @@
-"use client"
+/*  "use client"
 
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
@@ -353,7 +353,6 @@ export default function RoleUpgradeForm() {
                 <div key={index} className="space-y-2">
                   <label className="text-base font-medium">{field.label}</label>
 
-                  {/* Camera or Upload Field */}
                   {field.type === "camera" ? (
                     <>
                       {photo ? (
@@ -390,7 +389,7 @@ export default function RoleUpgradeForm() {
                     <div>
                       <input
                         type="file"
-                        accept="*/*"
+                        accept=
                         ref={(el) => (fileInputRefs.current[field.name] = el)}
                         onChange={(e) => handleFileChange(field.name, e)}
                         className="hidden"
@@ -440,3 +439,8 @@ export default function RoleUpgradeForm() {
     </div>
   )
 }
+
+
+*/
+
+export {};

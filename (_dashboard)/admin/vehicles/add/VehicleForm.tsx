@@ -1,4 +1,4 @@
-"use client"
+/* "use client"
 
 // import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -25,9 +25,8 @@ const VehicleForm = () => {
     </Link>
     <span>/</span>
     <span className="text-foreground">Vehicles</span>
-    </div> */}
+    </div> 
     <div className="space-y-6">
-    {/* <h1 className="text-lg font-medium">Add Vehicle</h1> */}
     <div className="space-y-4">
         <div className="grid gap-2">
         <label htmlFor="make">Make:</label>
@@ -101,3 +100,6 @@ const VehicleForm = () => {
 }
 
 export default VehicleForm
+
+*/
+export {};

@@ -1,4 +1,4 @@
-"use client"
+/* "use client"
 
 import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
@@ -29,3 +29,6 @@ export default function AddUserPage() {
     </div>
   )
 }
+*/
+
+export {};

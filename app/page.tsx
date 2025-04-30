@@ -3,12 +3,10 @@
 import Support from "@/components/support";
 import Footer from "@/components/footer"; // Import the Footer component
 import Image from "next/image";
-import Link from "next/link";
-import { Phone } from "lucide-react";
 import { Book, CreditCard, Flag } from 'lucide-react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useEffect, useState } from "react";
+// Removed unused useEffect import
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { stations, trips } from "@/data/dummy-data"; // Import dummy data
 
@@ -29,47 +27,9 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ icon, title, description }) =
 );
 
 export default function Home() {
-  const [location, setLocation] = useState("");
-  const [isLocationEditable, setIsLocationEditable] = useState(false);
-  const [error, setError] = useState("");
   const [startStation, setStartStation] = useState("");
   const [destinationStation, setDestinationStation] = useState("");
   const router = useRouter();
-
-  useEffect(() => {
-    if (!navigator.geolocation) {
-      setError("Geolocation is not supported by your browser.");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-
-        try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
-          );
-          const data = await response.json();
-          setLocation(data.display_name || "Location not found");
-        } catch (err) {
-          console.error("Error fetching location:", err);
-          setError("Failed to fetch location address.");
-        }
-      },
-      (positionError) => {
-        setError(positionError.message || "Could not retrieve location.");
-      }
-    );
-  }, []);
-
-  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLocation(e.target.value);
-  };
-
-  const toggleLocationEdit = () => {
-    setIsLocationEditable(!isLocationEditable);
-  };
 
   const handleCheckFare = () => {
     if (!startStation || !destinationStation) {
@@ -77,7 +37,6 @@ export default function Home() {
       return;
     }
 
-    // Check if a matching trip exists
     const matchingTrip = trips.find(
       (trip) =>
         trip.start_station.id.toString() === startStation &&
@@ -85,7 +44,6 @@ export default function Home() {
     );
 
     if (matchingTrip) {
-      // Redirect to the trips page with query parameters
       router.push(
         `/trips?start=${startStation}&destination=${destinationStation}`
       );
@@ -110,6 +68,7 @@ export default function Home() {
             <h3 className="text-2xl font-extrabold mb-6">
               Select your start and destination stations to check your fare now!
             </h3>
+        
             <div className="space-y-4">
               <div className="flex flex-col space-y-2">
                 <label htmlFor="start-station" className="text-sm font-medium">
@@ -167,7 +126,7 @@ export default function Home() {
               We are revolutionizing transportation in Ghana by making Trotro (shared minibus) information accessible to over 3.5 million commuters in Accra, Kumasi, and Obuasi.
             </p>
             <p className="text-lg text-gray-700 leading-relaxed">
-              We are on a mission to digitize transportation, making it smarter, safer, and more efficient for everyone. Whether it's finding fares, routes, or sending items, Trotro.Live is your go-to platform.
+              We are on a mission to digitize transportation, making it smarter, safer, and more efficient for everyone. Whether its finding fares, routes, or sending items, Trotro.Live is your go-to platform.
             </p>
             <p className="text-lg text-gray-700 leading-relaxed">
               Join us in transforming the way Ghana moves, one ride at a time.
@@ -187,7 +146,7 @@ export default function Home() {
           </div>
         </section>
         {/* App Promotion */}
-        <section id="services" className="bg-gradient-to-r from-yellow-50 via-pink-50 to-pink-100 py-16">
+        <section id="web3" className="bg-gradient-to-r from-yellow-50 via-pink-50 to-pink-100 py-16">
           <div className="container mx-auto px-4 grid md:grid-cols-2 gap-8 items-center">
             <Image
               src='/assets/trotrodao.jpeg'
