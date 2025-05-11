@@ -46,7 +46,7 @@ export function SiteHeader() {
     >
       <div className={`container flex h-16 items-center justify-between transition-colors duration-300 ${
         scrolled ? 'bg-transparent' : 'bg-white'
-      } ml-5`}>
+      } -ml-1 lg:ml-5`}>
         <div className="flex items-center ml-12 scale-75">
           <Link href="/" prefetch={true} className="font-bold">
             <Image
