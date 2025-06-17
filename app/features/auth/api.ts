@@ -20,8 +20,8 @@ export const authApi = {
         },
       });
 
-      const user = localStorage.setItem('user', JSON.stringify(response.data.user));
-      console.log('User Details: ', user);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      console.log('User Details: ', response.data.user);
       console.log('Login API response:', response.data);
       return response.data;
     } catch (error) {
@@ -34,9 +34,49 @@ export const authApi = {
     }
   },
 
+  // New Civic login function
+  civicLogin: async (civicToken: string): Promise<AuthResponse> => {
+    try {
+      const response = await axiosInstance.post('accounts/api/civic-login/', {
+        civic_token: civicToken,
+      }, {
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      console.log('Civic login API response:', response.data);
+      
+      // Store user data if present
+      if (response.data.user) {
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      }
+
+      return response.data;
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.error('Civic login failed:', error.response?.data || error.message);
+        
+        const errorMessage = error.response?.data?.message ||
+                           error.response?.data?.detail ||
+                           error.response?.data?.error ||
+                           'Civic authentication failed';
+
+        throw new ApiError(
+          error.response?.status || 500,
+          typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage)
+        );
+      } else {
+        console.error('Civic login failed:', error);
+      }
+      throw new ApiError(500, 'An unexpected error occurred during Civic authentication');
+    }
+  },
+
   register: async (userData: RegisterData, csrfToken: string): Promise<AuthResponse> => {
     try {
-
       const payload = {
         user: {
           full_name: userData.full_name.trim(),
@@ -50,7 +90,7 @@ export const authApi = {
 
       const response = await axios.post<AuthResponse>(
         `${process.env.NEXT_PUBLIC_API_URL}/accounts/api/register/passenger/`,
-        payload, // Send the nested structure
+        payload,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -72,7 +112,6 @@ export const authApi = {
           headers: error.response?.headers,
         });
 
-        // Extract error message from various possible formats
         const errorMessage = error.response?.data?.message ||
                            error.response?.data?.detail ||
                            error.response?.data?.error ||
@@ -90,27 +129,26 @@ export const authApi = {
 
   logout: async (): Promise<void> => {
     try {
-      const csrfToken = await getCsrfToken(); // Await the CSRF token
+      const csrfToken = await getCsrfToken();
       console.log('Initiating logout...');
       const response = await axiosInstance.post(
         '/accounts/api/logout/',
-        {}, // Body (optional, empty here)
+        {},
         {
           withCredentials: true,
           headers: {
-            'X-CSRFToken': csrfToken || '', // Ensure the token is sent
+            'X-CSRFToken': csrfToken || '',
           },
         }
       );
       console.log('Logout successful:', response.data);
 
-      // Clear auth-related cookies or tokens
       if (typeof window !== 'undefined') {
         Cookies.remove('access_token');
         Cookies.remove('refresh_token');
+        localStorage.removeItem('user');
       }
     } catch (error) {
-      // Log detailed error information
       if (error instanceof AxiosError) {
         console.error('Logout failed:', {
           message: error.message,
@@ -122,14 +160,13 @@ export const authApi = {
       }
       alert('Logout failed. Please try again.');
     } finally {
-      // Additional cleanup
       if (typeof window !== 'undefined') {
         Cookies.remove('access_token');
         Cookies.remove('refresh_token');
+        localStorage.removeItem('user');
       }
     }
   },
-
 };
 
 export const refreshAccessToken = async (refreshToken: string): Promise<{ access: string } | null> => {
@@ -150,7 +187,7 @@ export const refreshAccessToken = async (refreshToken: string): Promise<{ access
 
     const data = await response.json();
     if (data.access) {
-      localStorage.setItem('access_token', data.access); // Save the new access token
+      localStorage.setItem('access_token', data.access);
       return { access: data.access };
     }
 
@@ -162,7 +199,7 @@ export const refreshAccessToken = async (refreshToken: string): Promise<{ access
 };
 
 export async function getCsrfToken() {
-  const response = await axios.get('/accounts/api/get-csrf-token/'); // Request CSRF token from backend
+  const response = await axios.get('/accounts/api/get-csrf-token/');
   const csrfToken = response.data.csrfToken;
   console.log('CSRF Token from server:', csrfToken);
   return csrfToken;
