@@ -13,7 +13,7 @@ export class ApiError extends Error {
 export const authApi = {
   login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
     try {
-      const response = await axiosInstance.post('/accounts/api/login/', credentials, {
+      const response = await axiosInstance.post('accounts/api/civic-login/', credentials, {
         withCredentials: true,
         headers: {
           Accept: 'application/json',
