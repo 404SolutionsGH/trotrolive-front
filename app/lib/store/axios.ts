@@ -86,22 +86,4 @@ axiosInstance.interceptors.response.use(
   }
 );
 
-const handleCivicLogin = async () => {
-  // 1. Get Civic JWT after wallet auth
-  const civicJwt = await civicAuth.getIdToken(); // Replace with actual Civic SDK call
-
-  // 2. Send JWT to backend
-  const response = await axiosInstance.post('/accounts/api/login/', {
-    civic_token: civicJwt,
-  });
-
-  // 3. Store tokens and redirect
-  if (response.data.access && response.data.refresh) {
-    localStorage.setItem('civic_jwt', response.data.access);
-    localStorage.setItem('refresh_token', response.data.refresh);
-    // Optionally set cookies as well
-    router.push('/admin'); // or wherever you want to redirect
-  }
-};
-
 export default axiosInstance;

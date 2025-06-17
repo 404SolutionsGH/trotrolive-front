@@ -59,7 +59,7 @@ const ConnectionRedirect = () => {
       if (publicKey && idToken) {
         try {
           // Send JWT to backend
-          const response = await axiosInstance.post("/accounts/api/login/", {
+          const response = await axiosInstance.post("/accounts/api/civic-login/", {
             civic_token: idToken,
           });
 
