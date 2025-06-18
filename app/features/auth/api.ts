@@ -11,33 +11,9 @@ export class ApiError extends Error {
 }
 
 export const authApi = {
-  login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
+  civicAuth: async (civicToken: string): Promise<AuthResponse> => {
     try {
-      const response = await axiosInstance.post('accounts/api/civic-login/', credentials, {
-        withCredentials: true,
-        headers: {
-          Accept: 'application/json',
-        },
-      });
-
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      console.log('User Details: ', response.data.user);
-      console.log('Login API response:', response.data);
-      return response.data;
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        console.error('Login failed:', error.response?.data || error.message);
-      } else {
-        console.error('Login failed:', error);
-      }
-      throw error;
-    }
-  },
-
-  // New Civic login function
-  civicLogin: async (civicToken: string): Promise<AuthResponse> => {
-    try {
-      const response = await axiosInstance.post('accounts/api/civic-login/', {
+      const response = await axiosInstance.post('accounts/api/civic-auth/', {
         civic_token: civicToken,
       }, {
         withCredentials: true,
@@ -47,9 +23,6 @@ export const authApi = {
         },
       });
 
-      console.log('Civic login API response:', response.data);
-      
-      // Store user data if present
       if (response.data.user) {
         localStorage.setItem('user', JSON.stringify(response.data.user));
       }
@@ -57,7 +30,7 @@ export const authApi = {
       return response.data;
     } catch (error) {
       if (error instanceof AxiosError) {
-        console.error('Civic login failed:', error.response?.data || error.message);
+        console.error('Civic authentication failed:', error.response?.data || error.message);
         
         const errorMessage = error.response?.data?.message ||
                            error.response?.data?.detail ||
@@ -69,102 +42,9 @@ export const authApi = {
           typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage)
         );
       } else {
-        console.error('Civic login failed:', error);
+        console.error('Civic authentication failed:', error);
       }
       throw new ApiError(500, 'An unexpected error occurred during Civic authentication');
-    }
-  },
-
-  register: async (userData: RegisterData, csrfToken: string): Promise<AuthResponse> => {
-    try {
-      const payload = {
-        user: {
-          full_name: userData.full_name.trim(),
-          email: userData.email.trim().toLowerCase(),
-          phone: userData.phone,
-          password: userData.password
-        }
-      };
-
-      console.log('Registration payload:', payload);
-
-      const response = await axios.post<AuthResponse>(
-        `${process.env.NEXT_PUBLIC_API_URL}/accounts/api/register/passenger/`,
-        payload,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken,
-            'Accept': 'application/json',
-          },
-          withCredentials: true,
-        }
-      );
-
-      console.log('Registration response:', response.data);
-      return response.data;
-
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        console.error('Registration error details:', {
-          status: error.response?.status,
-          data: error.response?.data,
-          headers: error.response?.headers,
-        });
-
-        const errorMessage = error.response?.data?.message ||
-                           error.response?.data?.detail ||
-                           error.response?.data?.error ||
-                           Object.values(error.response?.data || {})[0] ||
-                           'Registration failed';
-
-        throw new ApiError(
-          error.response?.status || 500,
-          typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage)
-        );
-      }
-      throw new ApiError(500, 'An unexpected error occurred during registration');
-    }
-  },
-
-  logout: async (): Promise<void> => {
-    try {
-      const csrfToken = await getCsrfToken();
-      console.log('Initiating logout...');
-      const response = await axiosInstance.post(
-        '/accounts/api/logout/',
-        {},
-        {
-          withCredentials: true,
-          headers: {
-            'X-CSRFToken': csrfToken || '',
-          },
-        }
-      );
-      console.log('Logout successful:', response.data);
-
-      if (typeof window !== 'undefined') {
-        Cookies.remove('access_token');
-        Cookies.remove('refresh_token');
-        localStorage.removeItem('user');
-      }
-    } catch (error) {
-      if (error instanceof AxiosError) {
-        console.error('Logout failed:', {
-          message: error.message,
-          status: error.response?.status,
-          data: error.response?.data,
-        });
-      } else {
-        console.error('Logout failed:', error);
-      }
-      alert('Logout failed. Please try again.');
-    } finally {
-      if (typeof window !== 'undefined') {
-        Cookies.remove('access_token');
-        Cookies.remove('refresh_token');
-        localStorage.removeItem('user');
-      }
     }
   },
 };

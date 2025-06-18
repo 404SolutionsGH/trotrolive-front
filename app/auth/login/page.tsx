@@ -53,7 +53,7 @@ const ConnectionRedirect = () => {
   const searchParams = useSearchParams();
   const { publicKey } = useWallet();
   const { user, idToken } = useUser();
-  
+
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authCompleted, setAuthCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,17 +65,16 @@ const ConnectionRedirect = () => {
         return;
       }
 
+      console.log("Wallet connected:", publicKey?.toString());
+      console.log("Civic JWT:", idToken);
+
       authAttempted.current = true;
       setIsAuthenticating(true);
       setError(null);
 
       try {
-        console.log('Starting Civic authentication...');
-        
-        // Use the new civicLogin function from authApi
-        const response = await authApi.civicLogin(idToken);
-
-        console.log('Civic authentication successful:', response);
+        const response = await authApi.civicAuth(idToken);
+        console.log("Civic Auth API response:", response);
 
         // Store tokens if present
         if (response.tokens) {
