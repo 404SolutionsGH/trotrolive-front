@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from 'next/navigation';
 import { CreditCard, HelpCircle, LayoutDashboard, LogOut, Settings, Star } from 'lucide-react';
 import Link from "next/link";
@@ -8,9 +9,17 @@ import axiosInstance from '@/app/lib/store/axios';
 import Cookies from 'js-cookie';
 
 export function Sidebar() {
-
     const router = useRouter();
+    const [user, setUser] = useState<{ full_name?: string; email?: string } | null>(null);
 
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            const storedUser = localStorage.getItem("user");
+            if (storedUser) {
+                setUser(JSON.parse(storedUser));
+            }
+        }
+    }, []);
 
     const handleLogout = async () => {
         try {
@@ -24,11 +33,15 @@ export function Sidebar() {
                     headers: { 'X-CSRFToken': csrfToken || '' },
                 }
             );
-            Cookies.remove('access_token');
-            Cookies.remove('refresh_token');
-            Cookies.remove('csrftoken');
+            Cookies.remove('access_token', { path: '/' });
+            Cookies.remove('refresh_token', { path: '/' });
+            Cookies.remove('csrftoken', { path: '/' });
             localStorage.removeItem('user');
+            // Optionally, clear all localStorage/sessionStorage if needed
+            // localStorage.clear();
+            // sessionStorage.clear();
             router.push('/auth/login');
+            window.location.reload();
         } catch (error) {
             console.error('Logout failed:', error);
             alert('Logout failed. Please try again.');
@@ -44,6 +57,12 @@ export function Sidebar() {
                     </div>
                     <span className="text-xl font-semibold">Trotro</span>
                 </div>
+                {user && (
+                    <div className="mt-4">
+                        <div className="font-bold">{user.full_name || "User"}</div>
+                        <div className="text-sm">{user.email}</div>
+                    </div>
+                )}
             </div>
             <nav className="flex-1 space-y-2 py-4">
                 <h2 className="mb-6 px-4 text-2xl font-bold">Menu</h2>
