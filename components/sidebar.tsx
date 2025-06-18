@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { CreditCard, HelpCircle, LayoutDashboard, LogOut, Settings, Star } from 'lucide-react';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import axios from '@/app/lib/store/axios';
+import axiosInstance from '@/app/lib/store/axios';
 import Cookies from 'js-cookie';
 
 export function Sidebar() {
@@ -16,24 +16,23 @@ export function Sidebar() {
         try {
             const csrfToken = Cookies.get('csrftoken');
             const refreshToken = Cookies.get('refresh_token');
-
-            const res = await axios.post('/accounts/api/logout/', { refresh_token: refreshToken }, {
-              withCredentials: true,
-              headers: { 'X-CSRFToken': csrfToken || '' }
-            });
-
-            console.log('Logout successful:', res.data);
-
-            // Clear tokens and redirect
+            await axiosInstance.post(
+                '/accounts/api/logout/',
+                { refresh_token: refreshToken },
+                {
+                    withCredentials: true,
+                    headers: { 'X-CSRFToken': csrfToken || '' },
+                }
+            );
             Cookies.remove('access_token');
             Cookies.remove('refresh_token');
             Cookies.remove('csrftoken');
             localStorage.removeItem('user');
             router.push('/auth/login');
-          } catch (error) {
+        } catch (error) {
             console.error('Logout failed:', error);
             alert('Logout failed. Please try again.');
-          }
+        }
     };
 
     return (
