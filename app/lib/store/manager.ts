@@ -2,7 +2,7 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const baseURL = process.env.NEXT_PUBLIC_API_URL || 'https://api.trotro.live';
 
 // Token refresh utility
 class TokenManager {

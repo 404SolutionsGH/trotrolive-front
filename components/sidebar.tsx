@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import { CreditCard, HelpCircle, LayoutDashboard, LogOut, Settings, Star } from 'lucide-react';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import axiosInstance from '@/app/lib/store/axios';
-import Cookies from 'js-cookie';
+import { useAuthStore } from "@/lib/auth-store";
 
 export function Sidebar() {
     const router = useRouter();
@@ -23,25 +22,9 @@ export function Sidebar() {
 
     const handleLogout = async () => {
         try {
-            const csrfToken = Cookies.get('csrftoken');
-            const refreshToken = Cookies.get('refresh_token');
-            await axiosInstance.post(
-                '/accounts/api/logout/',
-                { refresh_token: refreshToken },
-                {
-                    withCredentials: true,
-                    headers: { 'X-CSRFToken': csrfToken || '' },
-                }
-            );
-            Cookies.remove('access_token', { path: '/' });
-            Cookies.remove('refresh_token', { path: '/' });
-            Cookies.remove('csrftoken', { path: '/' });
-            localStorage.removeItem('user');
-            // Optionally, clear all localStorage/sessionStorage if needed
-            // localStorage.clear();
-            // sessionStorage.clear();
-            router.push('/auth/login');
-            window.location.reload();
+            const logout = useAuthStore.getState().logout;
+            logout();
+            router.push('/');
         } catch (error) {
             console.error('Logout failed:', error);
             alert('Logout failed. Please try again.');
@@ -66,19 +49,19 @@ export function Sidebar() {
             </div>
             <nav className="flex-1 space-y-2 py-4">
                 <h2 className="mb-6 px-4 text-2xl font-bold">Menu</h2>
-                <Link href="/admin" className="flex items-center gap-3 rounded-none bg-white/10 px-4 py-2 text-white transition-colors hover:bg-white/20">
+                <Link href="/dashboard/admin" className="flex items-center gap-3 rounded-none bg-white/10 px-4 py-2 text-white transition-colors hover:bg-white/20">
                     <LayoutDashboard className="h-5 w-5" />
                     Dashboard
                 </Link>
-                <Link href="/admin/role" className="flex items-center gap-3 rounded-none px-4 py-2 text-white transition-colors hover:bg-white/20">
+                <Link href="/dashboard/admin/role" className="flex items-center gap-3 rounded-none px-4 py-2 text-white transition-colors hover:bg-white/20">
                     <Star className="h-5 w-5" />
                     Role Upgrade
                 </Link>
-                <Link href="/admin/settings" className="flex items-center gap-3 rounded-none px-4 py-2 text-white transition-colors hover:bg-white/20">
+                <Link href="/dashboard/admin/settings" className="flex items-center gap-3 rounded-none px-4 py-2 text-white transition-colors hover:bg-white/20">
                     <Settings className="h-5 w-5" />
                     Settings
                 </Link>
-                <Link href="/admin/about" className="flex items-center gap-3 rounded-none px-4 py-2 text-white transition-colors hover:bg-white/20">
+                <Link href="/dashboard/admin/about" className="flex items-center gap-3 rounded-none px-4 py-2 text-white transition-colors hover:bg-white/20">
                     <HelpCircle className="h-5 w-5" />
                     About
                 </Link>

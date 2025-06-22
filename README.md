@@ -1,7 +1,6 @@
-
 # 🚐 Trotro.Live Frontend
 
-**Digitising Ghana’s Trotro Transport System — One Route at a Time**
+**Digitising Ghana's Trotro Transport System — One Route at a Time**
 
 This is the **frontend** of [Trotro.Live]([https://trotroweb3.onrender.com/]), a web application aimed at making transportation information more accessible, efficient, and connected for over 3.5 million commuters across Accra, Kumasi, and Obuasi.
 
@@ -64,7 +63,7 @@ Then open [http://localhost:3000](http://localhost:3000) in your browser.
 Create a `.env` file in the project root with the following:
 
 ```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
+NEXT_PUBLIC_API_URL=https://api.trotro.live
 ```
 
 Replace the value with your actual **Django API** endpoint.
@@ -106,11 +105,11 @@ Push your repo and follow their steps to get it live.
 
 ## 👐 Contribute
 
-We’re open to contributions! Please fork the repo and create a PR — let’s build a better commute together.
+We're open to contributions! Please fork the repo and create a PR — let's build a better commute together.
 
 ---
 
-**Trotro.Live** – Making Ghana’s transport smarter, safer, and on-chain.
+**Trotro.Live** – Making Ghana's transport smarter, safer, and on-chain.
 
 🚌 🇬🇭 🛠️
 

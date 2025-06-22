@@ -1,7 +1,8 @@
 "use client";
 
-// import { useEffect } from "react";
-// import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/lib/auth-store";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { Header } from "../header";
 import { Sidebar } from "../sidebar";
 // import { getCookie } from "cookies-next";
@@ -11,6 +12,16 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const isAuthenticated = useAuthStore((state: any) => state.isAuthenticated);
+  const logout = useAuthStore((state: any) => state.logout);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace("/");
+    }
+  }, [isAuthenticated, router]);
+
   // const router = useRouter();
 
   // useEffect(() => {

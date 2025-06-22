@@ -55,7 +55,7 @@ export const refreshAccessToken = async (refreshToken: string): Promise<{ access
       throw new Error('No refresh token found');
     }
 
-    const response = await fetch('http://localhost:8000/accounts/api/token/refresh/', {
+    const response = await fetch('https://api.trotro.live/accounts/api/token/refresh/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh: refreshToken }),

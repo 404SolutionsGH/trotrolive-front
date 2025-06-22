@@ -22,7 +22,7 @@ export default function FundWallet() {
     console.log("Amount entered:", amount);
 
     try {
-      const response = await fetch("http://localhost:8000/trotro-pay/preload-wallet/", {
+      const response = await fetch("https://api.trotro.live/trotro-pay/preload-wallet/", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

@@ -11,8 +11,8 @@ import {
 import { WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { CivicAuthProvider, useUser } from "@civic/auth-web3/react";
 import "@solana/wallet-adapter-react-ui/styles.css";
-import Cookies from 'js-cookie';
 import { authApi, ApiError } from "@/app/features/auth/api";
+import { useAuthStore } from "@/lib/auth-store";
 
 const WalletPage = () => {
   const [isClient, setIsClient] = useState(false);
@@ -54,6 +54,9 @@ const ConnectionRedirect = () => {
   const { publicKey } = useWallet();
   const { user, idToken } = useUser();
 
+  const setPublicKey = useAuthStore((state: any) => state.setPublicKey);
+  const login = useAuthStore((state: any) => state.login);
+
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authCompleted, setAuthCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,10 +79,10 @@ const ConnectionRedirect = () => {
         const response = await authApi.civicAuth(idToken);
         console.log("Civic Auth API response:", response);
 
-        // Store tokens if present
-        if (response.tokens) {
-          Cookies.set("access_token", response.tokens.access, { path: "/" });
-          Cookies.set("refresh_token", response.tokens.refresh, { path: "/" });
+        // Store tokens and user in Zustand
+        if (response.tokens && response.user) {
+          setPublicKey(publicKey?.toString() || null);
+          login(response.user, response.tokens);
         }
 
         setAuthCompleted(true);
@@ -105,7 +108,7 @@ const ConnectionRedirect = () => {
     };
 
     authenticateWithCivic();
-  }, [publicKey, idToken, isAuthenticating, authCompleted, router, searchParams]);
+  }, [publicKey, idToken, isAuthenticating, authCompleted, router, searchParams, setPublicKey, login]);
 
   if (error) {
     return (

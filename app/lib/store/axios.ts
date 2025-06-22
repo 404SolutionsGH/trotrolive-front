@@ -2,7 +2,7 @@ import Cookies from 'js-cookie';
 import axios from 'axios';
 import { tokenManager } from './manager'; // Import the token manager
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const baseURL = process.env.NEXT_PUBLIC_API_URL || 'https://api.trotro.live';
 
 export const axiosInstance = axios.create({
   baseURL,

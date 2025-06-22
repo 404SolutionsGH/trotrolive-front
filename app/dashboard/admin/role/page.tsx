@@ -1,4 +1,4 @@
-/*  "use client"
+"use client"
 
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
@@ -10,12 +10,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Camera, Cloud, X } from 'lucide-react'
+import { Camera, CheckCircle, Clock, Car, User, Building, Users } from 'lucide-react'
 import 'react-toastify/dist/ReactToastify.css';
 import { toast, ToastContainer } from 'react-toastify';
 import Cookies from 'js-cookie';
-
+import Input from "@/components/ui/input"
+import { FileUploadCard } from "@/components/ui/file-upload-card"
+import { useRoleUpgradeStore } from "@/lib/role-upgrade-store"
 
 type Role = "driver" | "owner" | "mate" | "master"
 
@@ -30,32 +31,58 @@ interface RoleFields {
   }
 }
 
+const roleIcons = {
+  driver: Car,
+  owner: User,
+  mate: Users,
+  master: Building
+};
+
+const roleLabels = {
+  driver: "Trotro Driver",
+  owner: "Trotro Car Owner", 
+  mate: "Trotro Mate",
+  master: "Trotro Station Master"
+};
+
 export default function RoleUpgradeForm() {
-  const [selectedRole, setSelectedRole] = useState<Role | "">("")
-  const [uploadedFiles, setUploadedFiles] = useState<{
-    [key: string]: File | null
-  }>({})
+  const {
+    selectedRole,
+    uploadedFiles,
+    isSubmitted,
+    isVerified,
+    submissionId,
+    lastCheckTime,
+    intervalCheck,
+    setSelectedRole,
+    setUploadedFiles,
+    setSubmitted,
+    setVerified,
+    setLastCheckTime,
+    resetForm,
+    storeFileBlob,
+    getFileBlob,
+    clearFileBlob
+  } = useRoleUpgradeStore();
+
   const [cameraActive, setCameraActive] = useState(false);
   const [photo, setPhoto] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Refs for file inputs
-  const fileInputRefs = useRef<{ [key: string]: HTMLInputElement | null }>({})
-
   const roleFields: RoleFields = {
     driver: {
       fields: [
-        // {
-        //   name: "idCard",
-        //   type: "upload",
-        //   label: "Upload ID Card",
-        // },
-        // {
-        //   name: "license",
-        //   type: "upload",
-        //   label: "Upload Driver's license",
-        // },
+        {
+          name: "idCard",
+          type: "upload",
+          label: "Upload ID Card",
+        },
+        {
+          name: "license",
+          type: "upload",
+          label: "Upload Driver's license",
+        },
         {
           name: "licenseNumber",
           type: "text",
@@ -115,6 +142,58 @@ export default function RoleUpgradeForm() {
     },
   }
 
+  // Load file blobs from cookies on mount
+  useEffect(() => {
+    if (selectedRole) {
+      const fields = roleFields[selectedRole].fields;
+      fields.forEach(field => {
+        if (field.type === "upload") {
+          const blob = getFileBlob(field.name);
+          if (blob && !uploadedFiles[field.name]) {
+            setUploadedFiles({
+              ...uploadedFiles,
+              [field.name]: blob
+            });
+          }
+        }
+      });
+    }
+  }, [selectedRole]);
+
+  // Polling mechanism for verification status
+  useEffect(() => {
+    if (isSubmitted && !isVerified && submissionId) {
+      const checkStatus = async () => {
+        try {
+          const authToken = Cookies.get('access_token');
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/accounts/api/role-upgrade-status/${submissionId}/`,
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${authToken}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.status === 'verified') {
+              setVerified(true);
+              toast.success("Role upgrade verified successfully!");
+            }
+          }
+        } catch (error) {
+          console.error("Error checking status:", error);
+        }
+      };
+
+      const interval = setInterval(checkStatus, intervalCheck * 1000);
+      return () => clearInterval(interval);
+    }
+  }, [isSubmitted, isVerified, submissionId, intervalCheck]);
+
   const handleCaptureSelfie = () => {
     const canvas = canvasRef.current;
     const video = videoRef.current;
@@ -131,7 +210,8 @@ export default function RoleUpgradeForm() {
           .then((res) => res.blob())
           .then((blob) => {
             const file = new File([blob], "selfie.png", { type: "image/png" });
-            setUploadedFiles((prev) => ({ ...prev, selfie: file }));
+            setUploadedFiles({ ...uploadedFiles, selfie: file });
+            storeFileBlob("selfie", file);
           });
       }
     }
@@ -153,147 +233,111 @@ export default function RoleUpgradeForm() {
     }
   };
 
-  const handleFileChange = (fieldName: string, e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+  const handleFileChange = (fieldName: string, file: File | null) => {
     if (file) {
-      setUploadedFiles(prev => ({
-        ...prev,
-        [fieldName]: file
-      }))
+      const newFiles = { ...uploadedFiles, [fieldName]: file };
+      setUploadedFiles(newFiles);
+      storeFileBlob(fieldName, file);
+    } else {
+      const newFiles = { ...uploadedFiles };
+      delete newFiles[fieldName];
+      setUploadedFiles(newFiles);
+      clearFileBlob(fieldName);
     }
-  }
+  };
 
   const handleInputChange = (fieldName: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
-    setUploadedFiles(prev => ({
-      ...prev,
-      [fieldName]: value
-    }));
-  }
-
-  const handleFileRemove = (fieldName: string) => {
-    setUploadedFiles(prev => {
-      const newFiles = { ...prev }
-      delete newFiles[fieldName]
-      return newFiles
-    })
-
-    // Reset the file input
-    if (fileInputRefs.current[fieldName]) {
-      fileInputRefs.current[fieldName]!.value = ''
-    }
-  }
-
+    setUploadedFiles({ ...uploadedFiles, [fieldName]: value });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    // Validate that all required files are uploaded
     if (!selectedRole) {
-      toast.error("Please select a role")
-      return
+      toast.error("Please select a role");
+      return;
     }
 
-    const requiredFields = roleFields[selectedRole].fields
+    const requiredFields = roleFields[selectedRole].fields;
     const missingFiles = requiredFields
       .filter(field => field.type === "upload" || field.type === "camera")
-      .filter(field => !uploadedFiles[field.name])
+      .filter(field => !uploadedFiles[field.name]);
 
     if (missingFiles.length > 0) {
-      toast.error(`Please upload all required files: ${missingFiles.map(f => f.label).join(', ')}`)
-      return
+      toast.error(`Please upload all required files: ${missingFiles.map(f => f.label).join(', ')}`);
+      return;
     }
 
     if (selectedRole === "driver" && !uploadedFiles["licenseNumber"]) {
-      toast.error("Please enter your license number")
-      return
+      toast.error("Please enter your license number");
+      return;
     }
 
-    // Create FormData to handle file uploads
-    const formData = new FormData()
+    // Create FormData
+    const formData = new FormData();
+    formData.append("role", selectedRole);
 
-    formData.append("role", selectedRole)
+    const user = localStorage.getItem("user.id");
+    formData.append("user", JSON.stringify(user));
 
-    const user = localStorage.getItem("user.id")
-
-    // const user = {
-    //   // Assuming you can get the user data, either from context, cookies, or a global state
-    //   // Example: cookies, or user state data
-    //   id: localStorage.getItem("id"), // Replace with actual method to fetch user data
-    //   // email: localStorage.getItem("email"), // Replace with actual method to fetch user data
-    //   // username: Cookies.get("username"), // Adjust to reflect actual user data from your app
-    // };
-
-    console.log("Driver User: ", user);
-
-    formData.append("user", JSON.stringify(user));  // Add the user field to the form data
-
-    // Append all uploaded files
+    // Append files
     Object.entries(uploadedFiles).forEach(([key, file]) => {
-      if (file) {
+      if (file && file instanceof File) {
         if (key === "idCard") {
           formData.append("ghana_card", file);
         } else {
           formData.append(key, file);
         }
       }
-    })
+    });
 
-    // Append text input fields
+    // Append text fields
     requiredFields.forEach((field) => {
       if (field.type === "text" && field.name) {
-        const inputValue = (document.getElementById(field.name) as HTMLInputElement)?.value
-        if (inputValue) {
-          formData.append(field.name, inputValue)
+        const value = uploadedFiles[field.name];
+        if (typeof value === 'string' && value) {
+          formData.append(field.name, value);
         }
       }
-    })
+    });
 
     try {
-      // Replace with your actual authentication token logic
       const authToken = Cookies.get('access_token');
-      console.log("Role Token: ", authToken);
-
       const endpoint = selectedRole === 'driver'
-      ? `${process.env.NEXT_PUBLIC_API_URL}/accounts/api/register/driver/`
-      : `${process.env.NEXT_PUBLIC_API_URL}/accounts/role-upgrade/`;
+        ? `${process.env.NEXT_PUBLIC_API_URL}/accounts/api/register/driver/`
+        : `${process.env.NEXT_PUBLIC_API_URL}/accounts/role-upgrade/`;
 
       const response = await fetch(endpoint, {
         method: "POST",
         credentials: 'include',
         headers: {
-          Authorization: `Bearer ${authToken}`.replace(/\s+/g, ' ').trim()
+          Authorization: `Bearer ${authToken}`,
         },
         body: formData,
-      })
+      });
 
       if (response.ok) {
-        const data = await response.json()
-        toast.success("Role upgraded successfully!")
-        console.log(data)
-        // Optional: Reset form after successful submission
-        handleClearForm()
+        const data = await response.json();
+        setSubmitted(true, data.submission_id || data.id);
+        toast.success("Role upgrade submitted successfully! We'll review your application.");
       } else {
-        const errorData = await response.json()
-        toast.error("Failed to upgrade role.")
-        console.error(errorData)
+        const errorData = await response.json();
+        toast.error(errorData.message || "Failed to submit role upgrade.");
       }
     } catch (error) {
-      console.error("An error occurred:", error)
-      toast.error("Something went wrong.")
+      console.error("An error occurred:", error);
+      toast.error("Something went wrong.");
     }
-  }
+  };
 
   const handleClearForm = () => {
-    setSelectedRole("")
-    setUploadedFiles({})
-    // Reset all file inputs
-    Object.values(fileInputRefs.current).forEach(ref => {
-      if (ref) ref.value = ''
-    })
-  }
+    resetForm();
+    setPhoto(null);
+    setCameraActive(false);
+    cleanupCamera();
+  };
 
-  // Cleanup function to stop the camera stream
   const cleanupCamera = () => {
     const video = videoRef.current;
     if (video && video.srcObject) {
@@ -305,36 +349,50 @@ export default function RoleUpgradeForm() {
   };
 
   useEffect(() => {
-    // Cleanup the camera when the component unmounts
     return () => {
       cleanupCamera();
     };
   }, []);
 
+  const isFormDisabled = isSubmitted && !isVerified;
+  const RoleIcon = selectedRole ? roleIcons[selectedRole as keyof typeof roleIcons] : null;
+
   return (
-    <div className="max-w-2xl mx-auto pt-10">
+    <div className="max-w-4xl mx-auto pt-10 mb-14">
       <ToastContainer />
       <Card className="relative">
         <CardHeader className="space-y-1">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-xl items-left text-[#C81E78]">Role Upgrade</CardTitle>
+            <div className="flex items-center gap-3">
+              {RoleIcon && <RoleIcon className="w-6 h-6 text-[#C81E78]" />}
+              <CardTitle className="text-xl text-[#C81E78]">Role Upgrade</CardTitle>
+              {isVerified && (
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <span className="text-sm text-green-600 font-medium">Verified</span>
+                </div>
+              )}
+            </div>
             <Button
               type="button"
               variant="ghost"
-              className="text-[#C81E78] items-right"
+              className="text-[#C81E78]"
               onClick={handleClearForm}
+              disabled={isFormDisabled}
             >
               Clear Form
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Role Selection */}
             <div className="space-y-2">
               <label className="text-base font-medium">Select Role</label>
               <Select
                 value={selectedRole}
                 onValueChange={(value) => setSelectedRole(value as Role)}
+                disabled={isFormDisabled}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select a role" />
@@ -348,139 +406,95 @@ export default function RoleUpgradeForm() {
               </Select>
             </div>
 
-            {selectedRole &&
-              roleFields[selectedRole].fields.map((field, index) => (
-                <div key={index} className="space-y-2">
-                  <label className="text-base font-medium">{field.label}</label>
-
-                  {field.type === "camera" ? (
-                    <>
-                      {photo ? (
-                        <div className="space-y-2">
-                          <img src={photo} alt="Selfie preview" className="w-full rounded-md" />
-                          <Button type="button"
+            {/* Form Fields */}
+            {selectedRole && (
+              <div className="space-y-6">
+                {roleFields[selectedRole].fields.map((field, index) => (
+                  <div key={index} className="space-y-3">
+                    {field.type === "camera" ? (
+                      <div className="space-y-3">
+                        <label className="text-base font-medium">{field.label}</label>
+                        {photo ? (
+                          <div className="space-y-2">
+                            <img src={photo} alt="Selfie preview" className="w-full max-w-md rounded-md" />
+                            <Button 
+                              type="button"
+                              className="bg-[#C81E78] hover:bg-[#A61860] text-white"
+                              onClick={() => setPhoto(null)}
+                              disabled={isFormDisabled}
+                            >
+                              Retake Selfie
+                            </Button>
+                          </div>
+                        ) : cameraActive ? (
+                          <div>
+                            <video ref={videoRef} className="w-full max-w-md rounded-md" />
+                            <Button 
+                              type="button"
+                              className="bg-[#C81E78] hover:bg-[#A61860] text-white mt-2"
+                              onClick={handleCaptureSelfie}
+                            >
+                              Capture Photo
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button 
+                            type="button"
                             className="bg-[#C81E78] hover:bg-[#A61860] text-white"
-                            onClick={() => setPhoto(null)}
+                            onClick={handleCameraAccess}
+                            disabled={isFormDisabled}
                           >
-                            Retake Selfie
+                            <Camera className="w-4 h-4 mr-2" />
+                            Open Camera
                           </Button>
-                        </div>
-                      ) : cameraActive ? (
-                        <div>
-                          <video ref={videoRef} className="w-full rounded-md" />
-                          <Button type="button"
-                            className="bg-[#C81E78] hover:bg-[#A61860] text-white mt-2"
-                            onClick={handleCaptureSelfie}
-                          >
-                            Capture Photo
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button type="button"
-                          className="bg-[#C81E78] hover:bg-[#A61860] text-white"
-                          onClick={handleCameraAccess}
-                        >
-                          Open Camera
-                        </Button>
-                      )}
-                      <canvas ref={canvasRef} className="hidden" />
-                    </>
-                  ) : field.type === "upload" ? (
-                    <div>
-                      <input
-                        type="file"
-                        accept=
-                        ref={(el) => (fileInputRefs.current[field.name] = el)}
-                        onChange={(e) => handleFileChange(field.name, e)}
-                        className="hidden"
-                        id={`file-upload-${field.name}`}
-                      />
-                      <label
-                        htmlFor={`file-upload-${field.name}`}
-                        className="border rounded-md p-4 text-center cursor-pointer hover:bg-gray-50 flex items-center justify-center"
-                      >
-                        <Cloud className="w-6 h-6 mr-2 text-[#C81E78]" />
-                        <span>
-                          {uploadedFiles[field.name]
-                            ? uploadedFiles[field.name]!.name
-                            : "Select File"}
-                        </span>
-                        {uploadedFiles[field.name] && (
-                          <X
-                            className="w-4 h-4 ml-2 text-red-500 cursor-pointer"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleFileRemove(field.name);
-                            }}
-                          />
                         )}
-                      </label>
-                    </div>
-                  ) : (
-                    <Input
-                      placeholder={field.placeholder}
-                      value={uploadedFiles[field.name] || ""}
-                      onChange={(e) => handleInputChange(field.name, e)}
-                    />
-                  )}
-                </div>
-              ))}
+                        <canvas ref={canvasRef} className="hidden" />
+                      </div>
+                    ) : field.type === "upload" ? (
+                      <FileUploadCard
+                        fieldName={field.name}
+                        label={field.label}
+                        value={uploadedFiles[field.name]}
+                        onChange={(file) => handleFileChange(field.name, file)}
+                        onRemove={() => handleFileChange(field.name, null)}
+                        disabled={isFormDisabled}
+                        isVerified={isVerified}
+                        roleType={roleLabels[selectedRole as keyof typeof roleLabels]}
+                      />
+                    ) : (
+                      <div className="space-y-2">
+                        <label className="text-base font-medium">{field.label}</label>
+                        <Input
+                          placeholder={field.placeholder}
+                          value={typeof uploadedFiles[field.name] === 'string' ? uploadedFiles[field.name] as string : ""}
+                          onChange={(e) => handleInputChange(field.name, e)}
+                          disabled={isFormDisabled}
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
 
-
+            {/* Submit Button */}
             <Button
               type="submit"
               className="w-full bg-[#C81E78] hover:bg-[#A61860] text-white"
+              disabled={isFormDisabled || !selectedRole}
             >
-              SUBMIT
+              {isSubmitted && !isVerified ? (
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 animate-spin" />
+                  Under Review
+                </div>
+              ) : (
+                "SUBMIT"
+              )}
             </Button>
           </form>
         </CardContent>
       </Card>
-    </div>
-  )
-}
-
-
-*/
-
-'use client';
-
-import Link from "next/link";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-
-export default function NotFound() {
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      <div className="text-center max-w-md mx-auto">
-        <div className="mb-8 flex justify-center">
-          <Image
-            src="/assets/logo.png"
-            alt="Logo"
-            unoptimized={true}
-            width={120}
-            height={120}
-            className="animate-bounce"
-          />
-        </div>
-        
-        <h1 className="text-4xl md:text-6xl font-extrabold mb-4 text-pink-500">404</h1>
-        
-        <h2 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
-          Oops! Page Not Found
-        </h2>
-        
-        <p className="text-gray-600 mb-8 text-lg">
-          {`The page you are looking for doesn't exist or has been moved.
-          Our trotro seems to have taken a wrong turn!`}
-        </p>
-        
-        <Button asChild className="bg-pink-500 hover:bg-pink-600 text-white px-8 py-3 rounded-lg shadow-lg">
-          <Link href="/">
-            Back to Home
-          </Link>
-        </Button>
-      </div>
     </div>
   );
 }

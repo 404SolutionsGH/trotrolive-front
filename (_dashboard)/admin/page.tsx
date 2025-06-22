@@ -45,7 +45,7 @@ export default function Admin() {
     const token = Cookies.get("access_token");
 
     try {
-      const response = await fetch("http://localhost:8000/trotro-pay/wallet/", {
+      const response = await fetch("https://api.trotro.live/trotro-pay/wallet/", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -75,7 +75,7 @@ export default function Admin() {
 
     try {
       const response = await fetch(
-        `http://localhost:8000/trotro-pay/wallet-balance/${userId}/`,
+        `https://api.trotro.live/trotro-pay/wallet-balance/${userId}/`,
         {
           method: "GET",
           headers: {
@@ -110,7 +110,7 @@ export default function Admin() {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8000/trotro-pay/wallet/", {
+      const response = await fetch("https://api.trotro.live/trotro-pay/wallet/", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,

@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
     const token = Cookies.get("access_token");
 
     try {
-      const response = await fetch("http://localhost:8000/trotro-pay/deposit/", {
+      const response = await fetch("https://api.trotro.live/trotro-pay/deposit/", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
