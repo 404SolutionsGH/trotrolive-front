@@ -115,7 +115,7 @@ export default function Home() {
               className="object-cover"
             />
           </div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 md:left-auto md:right-8 md:translate-x-0 bg-white p-4 md:p-6 rounded-lg shadow-lg w-[90%] max-w-sm mx-auto">
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 md:left-auto md:right-8 md:translate-x-0 bg-white p-4 md:p-6 rounded-lg shadow-lg w-[90%] max-w-sm mx-auto mt-12">
             <h3 className="text-xl md:text-2xl font-extrabold mb-4 md:mb-6">
               Select your start and destination stations to check your fare now!
             </h3>
@@ -202,17 +202,20 @@ export default function Home() {
         {/* App Promotion */}
         <section id="web3" className="bg-gradient-to-r from-yellow-50 via-pink-50 to-pink-100 py-10 md:py-16 px-4">
           <div className="container mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div className="relative w-full h-64 sm:h-80 md:h-auto mx-auto max-w-xs">
-              <Image
-                src='/assets/trotrodao.jpeg'
-                alt="Mobile app screenshot"
-                width={400}
-                height={800}
-                className="mx-auto"
-              />
+            <div className="order-2 md:order-1">
+              <div className="relative w-full h-[300px] md:h-[500px] max-w-sm mx-auto">
+                <Image
+                  src='/assets/trotrodao.jpeg'
+                  alt="Mobile app screenshot"
+                  fill
+                  className="object-contain"
+                />
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-4 md:mb-6">Introducing Trotro DAO: The Future of Transportation</h1>
+            <div className="order-1 md:order-2">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold mb-4 md:mb-6">
+                Introducing Trotro DAO: The Future of Transportation
+              </h1>
               <p className="text-sm md:text-base text-gray-600 mb-4 md:mb-6">
                 Trotro.Live leverages blockchain and DAO principles to revolutionize transportation in Ghana. By decentralizing decision-making and empowering commuters, we aim to create a more efficient and transparent transportation ecosystem. Join us in shaping the future of mobility.
               </p>

@@ -4,24 +4,16 @@ import { Bell } from 'lucide-react'
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { useAuthStore } from "@/lib/auth-store";
 
 export function Header() {
-
-  const [fullName, setFullName] = useState("");
-
-  // Fetch full name from localStorage when component mounts
-  useEffect(() => {
-    const storedName = localStorage.getItem("user");
-    if (storedName) {
-      const user = JSON.parse(storedName);
-      setFullName(user.full_name); // Update state with full name
-    }
-  }, []);
+  const user = useAuthStore((state: any) => state.user);
+  const fullName = user?.full_name || "User";
 
   return (
     <header className="flex items-center justify-between bg-white p-4 shadow-sm">
       <div>
-        <h1 className="text-2xl font-semibold text-[#2D3748]">Hello, {fullName || "User"}</h1>
+        <h1 className="text-2xl font-semibold text-[#2D3748]">Hello, {fullName}</h1>
         <p className="text-muted-foreground">Welcome back</p>
       </div>
       <Button variant="outline" className="relative justify-start w-[15%] rounded-full">

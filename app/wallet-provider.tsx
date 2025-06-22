@@ -9,11 +9,16 @@ import {
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import "@solana/wallet-adapter-react-ui/styles.css";
 import { SiteHeader } from "@/components/site-header";
+import { usePathname } from "next/navigation";
+// import { SiteHeader } from "@/components/site-header";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [isClient, setIsClient] = useState(false);
   const clientId = process.env.NEXT_PUBLIC_CIVIC_CLIENT_ID;
   const endpoint = "https://api.mainnet-beta.solana.com";
+  const pathname = usePathname();
+  // For SSR/CSR compatibility, fallback to usePathname if available
+  // const pathname = usePathname();
 
   useEffect(() => {
     setIsClient(true);
@@ -24,6 +29,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     return <div className="min-h-screen bg-gray-100"></div>;
   }
 
+  const isDashboard = pathname?.startsWith("/dashboard");
+
   return (
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={[]} autoConnect>
@@ -31,7 +38,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <CivicAuthProvider clientId={`${clientId}`}>
             <div className="min-h-screen flex flex-col">
               {/* Header */}
-              <SiteHeader />
+              {!isDashboard && <SiteHeader />}
 
               {/* Main Content */}
               <main className="flex-1">{children}</main>

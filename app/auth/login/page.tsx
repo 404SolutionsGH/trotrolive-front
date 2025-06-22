@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ConnectionProvider,
@@ -10,10 +11,9 @@ import {
 import { WalletModalProvider, WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { CivicAuthProvider, useUser } from "@civic/auth-web3/react";
 import "@solana/wallet-adapter-react-ui/styles.css";
-import Cookies from 'js-cookie';
-import { axiosInstance } from "@/app/lib/store/axios";
+import { authApi, ApiError } from "@/app/features/auth/api";
+import { useAuthStore } from "@/lib/auth-store";
 
-// Main component wrapper
 const WalletPage = () => {
   const [isClient, setIsClient] = useState(false);
   const clientId = process.env.NEXT_PUBLIC_CIVIC_CLIENT_ID;
@@ -23,7 +23,7 @@ const WalletPage = () => {
   }, []);
 
   if (!isClient) {
-    return null; // Avoid rendering during server-side rendering
+    return null;
   }
 
   const endpoint = "https://api.devnet.solana.com";
@@ -52,37 +52,92 @@ const ConnectionRedirect = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { publicKey } = useWallet();
-  const { user, idToken } = useUser(); // Get user info and Civic JWT
+  const { user, idToken } = useUser();
+
+  const setPublicKey = useAuthStore((state: any) => state.setPublicKey);
+  const login = useAuthStore((state: any) => state.login);
+
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [authCompleted, setAuthCompleted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const authAttempted = useRef(false);
 
   useEffect(() => {
     const authenticateWithCivic = async () => {
-      if (publicKey && idToken) {
-        try {
-          // Send JWT to backend
-          const response = await axiosInstance.post("/accounts/api/civic-login/", {
-            civic_token: idToken,
-          });
+      if (!publicKey || !idToken || isAuthenticating || authCompleted || authAttempted.current) {
+        return;
+      }
 
-          Cookies.set("access_token", response.data.tokens.access, { path: "/" });
-          Cookies.set("refresh_token", response.data.tokens.refresh, { path: "/" });
-          localStorage.setItem("user", JSON.stringify(response.data.user));
+      console.log("Wallet connected:", publicKey?.toString());
+      console.log("Civic JWT:", idToken);
 
-          const redirectPath = searchParams.get("redirect") || "/";
-          router.push(redirectPath);
-        } catch (err) {
-          console.error("Civic login failed:", err);
+      authAttempted.current = true;
+      setIsAuthenticating(true);
+      setError(null);
+
+      try {
+        const response = await authApi.civicAuth(idToken);
+        console.log("Civic Auth API response:", response);
+
+        // Store tokens and user in Zustand
+        if (response.tokens && response.user) {
+          setPublicKey(publicKey?.toString() || null);
+          login(response.user, response.tokens);
         }
+
+        setAuthCompleted(true);
+        
+        // Redirect after successful authentication
+        const redirectPath = searchParams.get("redirect") || "/";
+        router.push(redirectPath);
+        
+      } catch (err) {
+        console.error("Civic authentication failed:", err);
+        
+        // Handle different types of errors
+        if (err instanceof ApiError) {
+          setError(`Authentication failed: ${err.message}`);
+        } else {
+          setError("An unexpected error occurred during authentication");
+        }
+        
+        // Reset states on error to allow retry
+        authAttempted.current = false;
+        setIsAuthenticating(false);
       }
     };
+
     authenticateWithCivic();
-  }, [publicKey, idToken, router, searchParams]);
+  }, [publicKey, idToken, isAuthenticating, authCompleted, router, searchParams, setPublicKey, login]);
+
+  if (error) {
+    return (
+      <div className="mt-6 text-center">
+        <div className="text-red-500 mb-4">
+          <p>{error}</p>
+        </div>
+        <button 
+          onClick={() => {
+            setError(null);
+            authAttempted.current = false;
+            setAuthCompleted(false);
+          }}
+          className="px-4 py-2 bg-[#D6246E] text-white rounded hover:bg-[#B71C5A]"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-6 text-center">
       {publicKey ? (
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D6246E]"></div>
-          <p className="text-lg mt-4">Wallet connected! Authenticating...</p>
+          <p className="text-lg mt-4">
+            {isAuthenticating ? "Authenticating..." : "Wallet connected! Authenticating..."}
+          </p>
         </div>
       ) : (
         <p className="text-lg text-gray-600 mt-4">Connect your wallet to continue.</p>

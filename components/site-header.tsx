@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { UserButton } from "@civic/auth/react";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useAuthStore } from "@/lib/auth-store";
 import { useState, useEffect } from "react";
 import {
   DropdownMenu,
@@ -16,10 +16,11 @@ export function SiteHeader() {
   const [isClient, setIsClient] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
- 
-  // Always call hooks at the top level, regardless of client/server
-  const wallet = useWallet();
- 
+
+  // Zustand store
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const publicKey = useAuthStore((state) => state.publicKey);
+
   useEffect(() => {
     setIsClient(true); // Set to true after the component mounts
 
@@ -30,23 +31,19 @@ export function SiteHeader() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
- 
-  // Safely use wallet data only when on client side
-  const publicKey = isClient ? wallet.publicKey : null;
-  const isConnected = isClient && !!publicKey;
 
   // Close mobile menu when clicking outside
   const handleClickOutside = () => {
     setMobileMenuOpen(false);
   };
- 
+
   return (
     <header 
       className="sticky top-0 z-50 w-full transition-colors duration-300 bg-none"
     >
       <div className={`container flex h-16 items-center justify-between transition-colors duration-300 ${
         scrolled ? 'bg-transparent' : 'bg-white'
-      } ml-5`}>
+      } -ml-1 lg:ml-5`}>
         <div className="flex items-center ml-12 scale-75">
           <Link href="/" prefetch={true} className="font-bold">
             <Image
@@ -73,11 +70,16 @@ export function SiteHeader() {
           <Link href="/about" prefetch={true} className="hover:text-primary">
             Who We Are
           </Link>
+          {isAuthenticated && (
+            <Link href="/dashboard/admin" prefetch={true} className="hover:text-primary">
+              Dashboard
+            </Link>
+          )}
         </nav>
 
         {/* User Account Section */}
         <div className="flex items-center gap-4">
-          {isConnected ? (
+          {isAuthenticated && publicKey ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="flex items-center gap-2">
@@ -100,7 +102,6 @@ export function SiteHeader() {
               </Button>
             </Link>
           )}
-          
           {/* Mobile Menu Button */}
           <Button 
             variant="ghost" 
@@ -154,6 +155,16 @@ export function SiteHeader() {
               >
                 About us
               </Link>
+              {isAuthenticated && (
+                <Link 
+                  href="/dashboard/admin" 
+                  className="hover:text-primary py-2"
+                  onClick={handleClickOutside}
+                  prefetch={true}
+                >
+                  Dashboard
+                </Link>
+              )}
             </nav>
           </div>
         </>

@@ -1,27 +1,38 @@
 "use client";
 
-import { useEffect } from "react";
+import { useAuthStore } from "@/lib/auth-store";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { Header } from "../header";
 import { Sidebar } from "../sidebar";
-import { getCookie } from "cookies-next";
+// import { getCookie } from "cookies-next";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const isAuthenticated = useAuthStore((state: any) => state.isAuthenticated);
+  const logout = useAuthStore((state: any) => state.logout);
   const router = useRouter();
 
   useEffect(() => {
-    // Check for the presence of the access token
-    const accessToken = getCookie("access_token");
-
-    if (!accessToken) {
-      // Redirect to login if no token is found
-      router.push("/login");
+    if (!isAuthenticated) {
+      router.replace("/");
     }
-  }, [router]);
+  }, [isAuthenticated, router]);
+
+  // const router = useRouter();
+
+  // useEffect(() => {
+  //   // Check for the presence of the access token
+  //   const accessToken = getCookie("access_token");
+
+  //   if (!accessToken) {
+  //     // Redirect to login if no token is found
+  //     router.push("/auth/login");
+  //   }
+  // }, [router]);
 
   return (
     <div className="flex h-screen bg-gray-100">
