@@ -7,13 +7,15 @@ import { Header } from "../header";
 import { Sidebar } from "../sidebar";
 // import { getCookie } from "cookies-next";
 
+interface AuthState { isAuthenticated: boolean; logout: () => void; }
+
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const isAuthenticated = useAuthStore((state: any) => state.isAuthenticated);
-  const logout = useAuthStore((state: any) => state.logout);
+  const isAuthenticated = useAuthStore((state: AuthState) => state.isAuthenticated);
+  const logout = useAuthStore((state: AuthState) => state.logout);
   const router = useRouter();
 
   useEffect(() => {

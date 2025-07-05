@@ -6,8 +6,10 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useAuthStore } from "@/lib/auth-store";
 
+interface User { full_name?: string; /* add other fields as needed */ }
+
 export function Header() {
-  const user = useAuthStore((state: any) => state.user);
+  const user = useAuthStore((state: User) => state.user);
   const fullName = user?.full_name || "User";
 
   return (

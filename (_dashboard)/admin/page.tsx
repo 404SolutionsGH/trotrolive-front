@@ -9,6 +9,7 @@ import { useDispatch } from 'react-redux';
 import { checkAuth } from '@/app/features/auth/authSlice';
 import { toast, ToastContainer } from 'react-toastify';
 import Cookies from 'js-cookie';
+import Image from "next/image";
 
 interface Wallet {
   id: string;
@@ -143,7 +144,7 @@ export default function Admin() {
     checkWalletBalance();
   }, []);
 
-  const [fullName, setFullName] = useState("");
+  const [fullName, setFullName] = useState(" ");
 
   // Fetch full name from localStorage when component mounts
   useEffect(() => {
@@ -153,6 +154,29 @@ export default function Admin() {
       setFullName(user.full_name); // Update state with full name
     }
   }, []);
+
+  // Handle input changes for future extensibility (e.g., forms)
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    // Example: If you add input fields in the future, update state accordingly
+    if (name === "fullName") {
+      setFullName(value);
+    }
+    // Add more fields as needed
+  };
+
+  // Example usage of handleChange with an input field for fullName
+  // (You can place this input in your JSX where appropriate)
+  // <input
+  //   type="text"
+  //   name="fullName"
+  //   value={fullName}
+  //   onChange={handleChange}
+  //   placeholder="Enter full name"
+  //   className="mb-4 p-2 border rounded"
+  // />
+  
 
   return (
     <main className="p-6">
@@ -237,6 +261,11 @@ export default function Admin() {
           )}
         </CardContent>
       </Card>
+
+      {/* Example Image Usage */}
+      <div className="mt-8">
+        <Image src={photo} alt="Selfie preview" width={400} height={300} />
+      </div>
 
     </main>
   )
