@@ -263,9 +263,9 @@ export default function Admin() {
       </Card>
 
       {/* Example Image Usage */}
-      <div className="mt-8">
+      {/* <div className="mt-8">
         <Image src={photo} alt="Selfie preview" width={400} height={300} />
-      </div>
+      </div> */}
 
     </main>
   )
