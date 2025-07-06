@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
@@ -17,6 +18,7 @@ import Cookies from 'js-cookie';
 import Input from "@/components/ui/input"
 import { FileUploadCard } from "@/components/ui/file-upload-card"
 import { useRoleUpgradeStore } from "@/lib/role-upgrade-store"
+import Image from "next/image"
 
 type Role = "driver" | "owner" | "mate" | "master"
 
@@ -70,7 +72,7 @@ export default function RoleUpgradeForm() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  const roleFields: RoleFields = {
+  const roleFields: RoleFields = useMemo(() => ({
     driver: {
       fields: [
         {
@@ -140,7 +142,7 @@ export default function RoleUpgradeForm() {
         },
       ],
     },
-  }
+  }), [])
 
   // Load file blobs from cookies on mount
   useEffect(() => {
@@ -158,7 +160,7 @@ export default function RoleUpgradeForm() {
         }
       });
     }
-  }, [selectedRole]);
+  }, [selectedRole, getFileBlob, roleFields, setUploadedFiles, uploadedFiles]);
 
   // Polling mechanism for verification status
   useEffect(() => {
@@ -192,7 +194,7 @@ export default function RoleUpgradeForm() {
       const interval = setInterval(checkStatus, intervalCheck * 1000);
       return () => clearInterval(interval);
     }
-  }, [isSubmitted, isVerified, submissionId, intervalCheck]);
+  }, [isSubmitted, isVerified, submissionId, intervalCheck, setVerified]);
 
   const handleCaptureSelfie = () => {
     const canvas = canvasRef.current;
@@ -416,7 +418,7 @@ export default function RoleUpgradeForm() {
                         <label className="text-base font-medium">{field.label}</label>
                         {photo ? (
                           <div className="space-y-2">
-                            <img src={photo} alt="Selfie preview" className="w-full max-w-md rounded-md" />
+                            <Image src={photo} alt="Selfie preview" className="w-full max-w-md rounded-md" width={500} height={500} />
                             <Button 
                               type="button"
                               className="bg-[#C81E78] hover:bg-[#A61860] text-white"

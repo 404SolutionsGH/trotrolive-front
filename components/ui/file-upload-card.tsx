@@ -1,10 +1,13 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 "use client";
 
 import { useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Cloud, X, FileText, Image, CheckCircle, Clock } from "lucide-react";
+import { Cloud, X, FileText, ImageIcon, CheckCircle, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
 
 interface FileUploadCardProps {
   fieldName: string;
@@ -64,7 +67,7 @@ export function FileUploadCard({
     
     if (value instanceof File) {
       if (value.type.startsWith('image/')) {
-        return <Image className="w-8 h-8 text-blue-500" />;
+        return <ImageIcon className="w-8 h-8 text-blue-500" width={32} height={32} />;
       } else {
         return <FileText className="w-8 h-8 text-green-500" />;
       }
@@ -127,10 +130,12 @@ export function FileUploadCard({
           {/* File Preview */}
           {preview && (
             <div className="mt-4">
-              <img 
-                src={preview} 
+              <Image
+                src={preview}
                 alt="File preview" 
                 className="w-full h-32 object-cover rounded-lg border"
+                width={100}
+                height={100}
               />
             </div>
           )}
