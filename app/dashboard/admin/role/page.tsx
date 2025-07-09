@@ -75,71 +75,51 @@ export default function RoleUpgradeForm() {
   const roleFields: RoleFields = useMemo(() => ({
     driver: {
       fields: [
-        {
-          name: "idCard",
-          type: "upload",
-          label: "Upload ID Card",
-        },
-        {
-          name: "license",
-          type: "upload",
-          label: "Upload Driver's license",
-        },
-        {
-          name: "licenseNumber",
-          type: "text",
-          label: "License Number",
-          placeholder: "Input your license number...",
-        },
+        { name: "ghana_card_front", type: "upload", label: "Upload Ghana Card (Front)" },
+        { name: "ghana_card_back", type: "upload", label: "Upload Ghana Card (Back)" },
+        { name: "driver_license_front", type: "upload", label: "Upload Driver's License (Front)" },
+        { name: "driver_license_back", type: "upload", label: "Upload Driver's License (Back)" },
+        { name: "license_number", type: "text", label: "License Number", placeholder: "Input your license number..." },
+        { name: "face_photo", type: "camera", label: "Take a Selfie" },
+        { name: "phone_number", type: "text", label: "Phone Number", placeholder: "Input your phone number..." },
+        { name: "location", type: "text", label: "Location", placeholder: "Input your location..." },
       ],
     },
     owner: {
       fields: [
-        {
-          name: "idCard",
-          type: "upload",
-          label: "Upload ID Card",
-        },
-        {
-          name: "vehicleType",
-          type: "text",
-          label: "Vehicle type",
-          placeholder: "Input vehicle type...",
-        },
-        {
-          name: "registrationNumber",
-          type: "text",
-          label: "Registration Number",
-          placeholder: "Input Registration Number...",
-        },
+        { name: "ghana_card_front", type: "upload", label: "Upload Ghana Card (Front)" },
+        { name: "ghana_card_back", type: "upload", label: "Upload Ghana Card (Back)" },
+        { name: "face_photo", type: "camera", label: "Take a Selfie" },
       ],
     },
     mate: {
       fields: [
-        {
-          name: "idCard",
-          type: "upload",
-          label: "Upload ID Card",
-        },
-        {
-          name: "selfie",
-          type: "camera",
-          label: "Take A Selfie",
-        },
+        { name: "ghana_card_front", type: "upload", label: "Upload Ghana Card (Front)" },
+        { name: "ghana_card_back", type: "upload", label: "Upload Ghana Card (Back)" },
+        { name: "face_photo", type: "camera", label: "Take a Selfie" },
+        { name: "location", type: "text", label: "Location", placeholder: "Input your location..." },
       ],
     },
     master: {
       fields: [
-        {
-          name: "idCard",
-          type: "upload",
-          label: "Upload ID Card",
-        },
-        {
-          name: "stationId",
-          type: "upload",
-          label: "Upload Station ID",
-        },
+        { name: "ghana_card_front", type: "upload", label: "Upload Ghana Card (Front)" },
+        { name: "ghana_card_back", type: "upload", label: "Upload Ghana Card (Back)" },
+        { name: "station_id_front", type: "upload", label: "Upload Station Card (Front)" },
+        { name: "station_id_back", type: "upload", label: "Upload Station Card (Back)" },
+        { name: "agency", type: "text", label: "Agency", placeholder: "Input agency name..." },
+        { name: "location", type: "text", label: "Location", placeholder: "Input your location..." },
+        { name: "phone_number", type: "text", label: "Phone Number", placeholder: "Input your phone number..." },
+        { name: "face_photo", type: "camera", label: "Take a Selfie" },
+      ],
+    },
+    passenger_contributor: {
+      fields: [
+        { name: "ghana_card_front", type: "upload", label: "Upload Ghana Card (Front)" },
+        { name: "ghana_card_back", type: "upload", label: "Upload Ghana Card (Back)" },
+        { name: "phone_number", type: "text", label: "Phone Number", placeholder: "Input your phone number..." },
+        { name: "location", type: "text", label: "Location", placeholder: "Input your location..." },
+        { name: "contribution_reason", type: "text", label: "Reason for Contributing", placeholder: "Why do you want to contribute?" },
+        { name: "face_photo", type: "camera", label: "Take a Selfie" },
       ],
     },
   }), [])
@@ -306,10 +286,7 @@ export default function RoleUpgradeForm() {
 
     try {
       const authToken = Cookies.get('access_token');
-      const endpoint = selectedRole === 'driver'
-        ? `${process.env.NEXT_PUBLIC_API_URL}/accounts/api/register/driver/`
-        : `${process.env.NEXT_PUBLIC_API_URL}/accounts/role-upgrade/`;
-
+      const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/accounts/api/role-upgrade/`;
       const response = await fetch(endpoint, {
         method: "POST",
         credentials: 'include',
@@ -404,6 +381,7 @@ export default function RoleUpgradeForm() {
                   <SelectItem value="owner">Trotro Car Owner</SelectItem>
                   <SelectItem value="mate">Trotro Mate</SelectItem>
                   <SelectItem value="master">Trotro Station Master</SelectItem>
+                  <SelectItem value="passenger_contributor">Passenger Contributor</SelectItem>
                 </SelectContent>
               </Select>
             </div>
