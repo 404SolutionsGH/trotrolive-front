@@ -1,10 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import Cookies from 'js-cookie';
+import { useNotificationStore } from './notification-store';
 
 interface User {
+  id: string;
   full_name: string;
   email: string;
+  web3_address?: string;
 }
 
 interface AuthState {
@@ -20,8 +23,8 @@ interface AuthState {
   setError: (error: string | null) => void;
   setPublicKey: (publicKey: string | null) => void;
   login: (user: User, tokens: { access: string; refresh: string }) => void;
-  logout: () => void;
-  checkAuth: () => boolean;
+  logout: () => Promise<void>;
+  checkAuth: () => Promise<boolean>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -40,7 +43,7 @@ export const useAuthStore = create<AuthState>()(
       setPublicKey: (publicKey) => set({ publicKey }),
 
       login: (user, tokens) => {
-        // Store tokens in cookies
+        // Store tokens in cookies with secure settings
         Cookies.set('access_token', tokens.access, { 
           expires: 7, 
           path: '/',
@@ -54,11 +57,7 @@ export const useAuthStore = create<AuthState>()(
           sameSite: 'lax'
         });
 
-        // Store user in localStorage for persistence
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('user', JSON.stringify(user));
-        }
-
+        // Store user in state
         set({ 
           user, 
           isAuthenticated: true, 
@@ -67,52 +66,88 @@ export const useAuthStore = create<AuthState>()(
         });
       },
 
-      logout: () => {
-        // Clear tokens
-        Cookies.remove('access_token', { path: '/' });
-        Cookies.remove('refresh_token', { path: '/' });
-        Cookies.remove('csrftoken', { path: '/' });
+      logout: async () => {
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts/api/logout/`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
 
-        // Clear localStorage
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('user');
-          localStorage.removeItem('civic_jwt');
-          localStorage.removeItem('refresh_token');
+          if (!response.ok) {
+            throw new Error('Logout failed');
+          }
+        } catch (error) {
+          console.error('Logout error:', error);
+        } finally {
+          // Clear tokens
+          Cookies.remove('access_token', { path: '/' });
+          Cookies.remove('refresh_token', { path: '/' });
+          Cookies.remove('csrftoken', { path: '/' });
+
+          // Clear localStorage
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('auth-storage');
+            localStorage.removeItem('notification-storage');
+          }
+
+          // Clear state
+          set({ 
+            user: null, 
+            isAuthenticated: false, 
+            error: null,
+            publicKey: null,
+            isLoading: false 
+          });
+
+          // Clear notifications
+          useNotificationStore.getState().clearAll();
+
+          // Force reload to clear any cached data
+          window.location.href = '/';
         }
-
-        set({ 
-          user: null, 
-          isAuthenticated: false, 
-          error: null,
-          publicKey: null,
-          isLoading: false 
-        });
       },
 
-      checkAuth: () => {
+      checkAuth: async () => {
         const accessToken = Cookies.get('access_token');
-        const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
         
-        if (accessToken && storedUser) {
-          try {
-            const user = JSON.parse(storedUser);
-            set({ 
-              user, 
-              isAuthenticated: true,
-              isLoading: false 
-            });
-            return true;
-          } catch (error) {
-            console.error('Error parsing stored user:', error);
-            get().logout();
-            return false;
-          }
-        } else {
+        if (!accessToken) {
           set({ 
             user: null, 
             isAuthenticated: false,
             isLoading: false 
           });
+          return false;
+        }
+
+        try {
+          // Verify token with backend
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts/api/protected/`, {
+            credentials: 'include',
+          });
+
+          if (!response.ok) {
+            throw new Error('Token invalid');
+          }
+
+          const data = await response.json();
+          
+          if (data.user) {
+            set({
+              user: data.user,
+              isAuthenticated: true,
+              isLoading: false
+            });
+            return true;
+          }
+          
+          throw new Error('No user data');
+        } catch (error) {
+          console.error('Auth check failed:', error);
+          // Clear invalid session
+          get().logout();
           return false;
         }
       },
@@ -126,4 +161,4 @@ export const useAuthStore = create<AuthState>()(
       }),
     }
   )
-); 
+);

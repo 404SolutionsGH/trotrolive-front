@@ -27,16 +27,31 @@ const cookieOptions = {
 const setAuthTokens = (tokens: { access?: string; refresh?: string }) => {
   if (tokens.access) {
     Cookies.set('access_token', tokens.access, cookieOptions);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('access_token', tokens.access);
+      localStorage.setItem('civic_jwt', tokens.access); // Ensure compatibility with tokenManager
+    }
   }
   if (tokens.refresh) {
     Cookies.set('refresh_token', tokens.refresh, cookieOptions);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('refresh_token', tokens.refresh);
+    }
   }
-
+  // Debug logging
+  if (typeof window !== 'undefined') {
+    console.log('[setAuthTokens] access_token:', localStorage.getItem('access_token'));
+    console.log('[setAuthTokens] refresh_token:', localStorage.getItem('refresh_token'));
+  }
 };
 
 const removeAuthTokens = () => {
   Cookies.remove('access_token', { path: '/' });
   Cookies.remove('refresh_token', { path: '/' });
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refresh_token');
+  }
 };
 
 export const registerUser = createAsyncThunk(

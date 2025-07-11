@@ -61,67 +61,92 @@ const ConnectionRedirect = () => {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authCompleted, setAuthCompleted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<'waiting-wallet' | 'waiting-civic' | 'authenticating' | 'success' | 'error'>('waiting-wallet');
+  const [timeoutReached, setTimeoutReached] = useState(false);
   const authAttempted = useRef(false);
+  const retryCount = useRef(0);
+
+  // Timeout to prevent infinite spinner
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (isAuthenticating) {
+      timeout = setTimeout(() => {
+        setTimeoutReached(true);
+        setStatus('error');
+        setError('Authentication timed out. Please try again.');
+        setIsAuthenticating(false);
+        authAttempted.current = false;
+      }, 15000); // 15s timeout
+    }
+    return () => clearTimeout(timeout);
+  }, [isAuthenticating]);
 
   useEffect(() => {
-    const authenticateWithCivic = async () => {
-      if (!publicKey || !idToken || isAuthenticating || authCompleted || authAttempted.current) {
-        return;
-      }
+    if (!publicKey) {
+      setStatus('waiting-wallet');
+      return;
+    }
+    if (!idToken) {
+      setStatus('waiting-civic');
+      return;
+    }
+    if (isAuthenticating || authCompleted || authAttempted.current) {
+      return;
+    }
+    setStatus('authenticating');
+    setIsAuthenticating(true);
+    setError(null);
+    authAttempted.current = true;
+    setTimeoutReached(false);
 
-      console.log("Wallet connected:", publicKey?.toString());
-      console.log("Civic JWT:", idToken);
-
-      authAttempted.current = true;
-      setIsAuthenticating(true);
-      setError(null);
-
+    (async () => {
       try {
+        console.log('[Civic Login] Wallet connected:', publicKey?.toString());
+        console.log('[Civic Login] Civic JWT:', idToken);
         const response = await authApi.civicAuth(idToken);
-        console.log("Civic Auth API response:", response);
-
-        // Store tokens and user in Zustand
+        console.log('[Civic Login] Civic Auth API response:', response);
         if (response.tokens && response.user) {
           setPublicKey(publicKey?.toString() || null);
           login(response.user, response.tokens);
+          setAuthCompleted(true);
+          setStatus('success');
+          // Redirect after successful authentication
+          const redirectPath = searchParams.get('redirect') || '/';
+          setTimeout(() => router.push(redirectPath), 500);
+        } else {
+          setStatus('error');
+          setError('Unexpected response from authentication server.');
         }
-
-        setAuthCompleted(true);
-        
-        // Redirect after successful authentication
-        const redirectPath = searchParams.get("redirect") || "/";
-        router.push(redirectPath);
-        
       } catch (err) {
-        console.error("Civic authentication failed:", err);
-        
-        // Handle different types of errors
+        setStatus('error');
         if (err instanceof ApiError) {
           setError(`Authentication failed: ${err.message}`);
         } else {
-          setError("An unexpected error occurred during authentication");
+          setError('An unexpected error occurred during authentication');
         }
-        
-        // Reset states on error to allow retry
         authAttempted.current = false;
+      } finally {
         setIsAuthenticating(false);
       }
-    };
-
-    authenticateWithCivic();
+    })();
   }, [publicKey, idToken, isAuthenticating, authCompleted, router, searchParams, setPublicKey, login]);
 
-  if (error) {
+  // UI rendering
+  if (status === 'error' && error) {
     return (
       <div className="mt-6 text-center">
         <div className="text-red-500 mb-4">
           <p>{error}</p>
         </div>
-        <button 
+        <button
           onClick={() => {
             setError(null);
-            authAttempted.current = false;
+            setStatus(publicKey ? (idToken ? 'authenticating' : 'waiting-civic') : 'waiting-wallet');
             setAuthCompleted(false);
+            setIsAuthenticating(false);
+            setTimeoutReached(false);
+            authAttempted.current = false;
+            retryCount.current++;
           }}
           className="px-4 py-2 bg-[#D6246E] text-white rounded hover:bg-[#B71C5A]"
         >
@@ -131,20 +156,44 @@ const ConnectionRedirect = () => {
     );
   }
 
-  return (
-    <div className="mt-6 text-center">
-      {publicKey ? (
+  if (status === 'waiting-wallet') {
+    return (
+      <div className="mt-6 text-center">
+        <p className="text-lg text-gray-600 mt-4">Connect your wallet to continue.</p>
+      </div>
+    );
+  }
+  if (status === 'waiting-civic') {
+    return (
+      <div className="mt-6 text-center">
         <div className="flex flex-col items-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D6246E]"></div>
-          <p className="text-lg mt-4">
-            {isAuthenticating ? "Authenticating..." : "Wallet connected! Authenticating..."}
-          </p>
+          <p className="text-lg mt-4">Waiting for Civic authentication...</p>
         </div>
-      ) : (
-        <p className="text-lg text-gray-600 mt-4">Connect your wallet to continue.</p>
-      )}
-    </div>
-  );
+      </div>
+    );
+  }
+  if (status === 'authenticating') {
+    return (
+      <div className="mt-6 text-center">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D6246E]"></div>
+          <p className="text-lg mt-4">Authenticating with Civic...</p>
+        </div>
+      </div>
+    );
+  }
+  if (status === 'success') {
+    return (
+      <div className="mt-6 text-center">
+        <div className="text-green-600 mb-4">
+          <p>Authentication successful! Redirecting...</p>
+        </div>
+      </div>
+    );
+  }
+  // fallback
+  return null;
 };
 
 export default WalletPage;

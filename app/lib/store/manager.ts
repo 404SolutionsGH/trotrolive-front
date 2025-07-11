@@ -19,7 +19,7 @@ class TokenManager {
     this.isRefreshing = true;
 
     try {
-      const refreshToken = localStorage.getItem('refresh_token');
+      const refreshToken = localStorage.getItem('refresh_token') || Cookies.get('refresh_token');
       if (!refreshToken) {
         throw new Error('No refresh token available');
       }
@@ -37,6 +37,7 @@ class TokenManager {
 
       const newAccessToken = response.data.access;
       localStorage.setItem('civic_jwt', newAccessToken);
+      Cookies.set('access_token', newAccessToken, { path: '/' });
 
       // Process queued requests
       this.processQueue(null, newAccessToken);

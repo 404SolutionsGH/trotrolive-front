@@ -21,8 +21,13 @@ axiosInstance.interceptors.request.use(
     const shouldSkipAuth = authSkipEndpoints.some(endpoint => config.url?.includes(endpoint));
 
     if (!shouldSkipAuth) {
+      // Try both 'civic_jwt' and 'access_token' for robustness
       let token = tokenManager.getAccessToken();
-      
+      if (!token && typeof window !== 'undefined') {
+        token = localStorage.getItem('access_token');
+      }
+      console.log('[Axios Interceptor] Using token:', token);
+
       if (token && tokenManager.isTokenExpired(token)) {
         try {
           token = await tokenManager.refreshToken();
@@ -34,6 +39,8 @@ axiosInstance.interceptors.request.use(
 
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
+      } else {
+        console.warn('[Axios Interceptor] No access token found for authenticated request.');
       }
     }
 
@@ -78,21 +85,6 @@ axiosInstance.interceptors.response.use(
 );
 
 export default axiosInstance;
-
-
-
-// import Cookies from 'js-cookie';
-// import axios from 'axios';
-
-// const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-
-// // Create axios instance
-// export const axiosInstance = axios.create({
-//   baseURL,
-//   timeout: 10000,
-//   headers: {
-//     'Content-Type': 'application/json',
-//   },
 //   withCredentials: true, // Include cookies in requests
 // });
 
