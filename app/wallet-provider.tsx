@@ -10,6 +10,9 @@ import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
 import "@solana/wallet-adapter-react-ui/styles.css";
 import { SiteHeader } from "@/components/site-header";
 import { usePathname } from "next/navigation";
+import { useDispatch } from 'react-redux';
+import { checkAuthStatus } from './features/auth/authSlice';
+import { AppDispatch } from './lib/store';
 // import { SiteHeader } from "@/components/site-header";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -17,12 +20,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const clientId = process.env.NEXT_PUBLIC_CIVIC_CLIENT_ID;
   const endpoint = "https://api.mainnet-beta.solana.com";
   const pathname = usePathname();
+  const dispatch = useDispatch<AppDispatch>();
   // For SSR/CSR compatibility, fallback to usePathname if available
   // const pathname = usePathname();
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Check authentication status on app startup
+  useEffect(() => {
+    if (isClient) {
+      dispatch(checkAuthStatus());
+    }
+  }, [isClient, dispatch]);
 
   // Avoid hydration mismatch
   if (!isClient) {

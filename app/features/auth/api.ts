@@ -11,26 +11,88 @@ export class ApiError extends Error {
 }
 
 export const authApi = {
-  civicAuth: async (civicToken: string): Promise<AuthResponse> => {
+  civicAuth: async (civicToken: string, displayMode: string = 'default'): Promise<AuthResponse> => {
     try {
-      const response = await axiosInstance.post('accounts/api/civic-auth/', {
+      // Check if we're in iframe mode
+      const isIframeMode = displayMode === 'iframe';
+      console.log(`[CivicAuth] Authentication in ${displayMode} mode`);
+      
+      // Clear any existing authentication state to prevent conflicts
+      if (typeof window !== 'undefined') {
+        Cookies.remove('access_token', { path: '/' });
+        Cookies.remove('refresh_token', { path: '/' });
+        localStorage.removeItem('civic_jwt');
+        localStorage.removeItem('user');
+        localStorage.removeItem('iframe_auth');
+      }
+      
+      const payload = {
         civic_token: civicToken,
-      }, {
+        display_mode: displayMode // Send display mode to backend for context
+      };
+      console.log('[CivicAuth] Sending payload:', payload);
+      
+      // Use direct axios instance to bypass any cached auth headers
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/accounts/api/civic-auth/`, payload, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
+          // Explicitly set Authorization to empty to prevent any existing token from being sent
+          'Authorization': '',
+          // Add a custom header for iframe mode to help the server configure cookie settings
+          'X-Display-Mode': displayMode
         },
       });
 
-      if (response.data.user) {
+      console.log('[CivicAuth] Backend response:', response.data);
+      
+      if (response.data.tokens && response.data.user) {
+        // Store tokens immediately with special handling for iframe mode
+        if (isIframeMode) {
+          // For iframe mode, use a special flag to indicate iframe authentication
+          localStorage.setItem('iframe_auth', 'true');
+          localStorage.setItem('iframe_auth_timestamp', Date.now().toString());
+        }
+        
+        // Always store tokens in both localStorage and cookies for redundancy
+        localStorage.setItem('access_token', response.data.tokens.access);
+        localStorage.setItem('refresh_token', response.data.tokens.refresh);
+        localStorage.setItem('civic_jwt', response.data.tokens.access);
         localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        // Set cookies with SameSite attributes appropriate for iframe use
+        Cookies.set('access_token', response.data.tokens.access, {
+          path: '/',
+          sameSite: isIframeMode ? 'none' : 'lax',
+          secure: true,
+          expires: 1 // 1 day
+        });
+        
+        Cookies.set('refresh_token', response.data.tokens.refresh, {
+          path: '/',
+          sameSite: isIframeMode ? 'none' : 'lax',
+          secure: true,
+          expires: 7 // 7 days
+        });
+        
+        // Force all axios instances to use the new token
+        if (axios.defaults.headers) {
+          axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.tokens.access}`;
+        }
+        
+        // Also set the token on our configured axiosInstance
+        if (axiosInstance.defaults.headers) {
+          axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${response.data.tokens.access}`;
+        }
+        
+        console.log('[CivicAuth] Authorization headers set on both axios instances');
       }
 
       return response.data;
     } catch (error) {
       if (error instanceof AxiosError) {
-        console.error('Civic authentication failed:', error.response?.data || error.message);
+        console.error('[CivicAuth] Backend error:', error.response?.data || error.message);
         
         const errorMessage = error.response?.data?.message ||
                            error.response?.data?.detail ||
@@ -42,7 +104,7 @@ export const authApi = {
           typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage)
         );
       } else {
-        console.error('Civic authentication failed:', error);
+        console.error('[CivicAuth] Unexpected error:', error);
       }
       throw new ApiError(500, 'An unexpected error occurred during Civic authentication');
     }
@@ -175,19 +237,23 @@ export const refreshAccessToken = async (refreshToken: string): Promise<{ access
       throw new Error('No refresh token found');
     }
 
-    const response = await fetch('http://localhost:8000/accounts/api/token/refresh/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh: refreshToken }),
-    });
+    console.log('Refreshing token using axiosInstance...');
+    const response = await axiosInstance.post('/accounts/api/token/refresh/',
+      { refresh: refreshToken },
+      {
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
 
-    if (!response.ok) {
-      throw new Error('Failed to refresh access token');
-    }
-
-    const data = await response.json();
+    const data = response.data;
     if (data.access) {
       localStorage.setItem('access_token', data.access); // Save the new access token
+      
+      // Update Authorization header on both axios instances
+      axios.defaults.headers.common['Authorization'] = `Bearer ${data.access}`;
+      axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${data.access}`;
+      
+      console.log('Token refreshed and Authorization headers updated');
       return { access: data.access };
     }
 

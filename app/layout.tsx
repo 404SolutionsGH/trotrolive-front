@@ -1,6 +1,11 @@
+import type { Metadata } from 'next';
 import { Providers } from './providers';
-import { AuthWrapper } from '@/components/layout/auth-wrapper';
 import './globals.css';
+
+export const metadata: Metadata = {
+  title: 'TrotroLive - Your Smart Transportation Companion',
+  description: 'Find the best routes, track your journey, and contribute to the community.',
+};
 
 export default function RootLayout({
   children,
@@ -9,18 +14,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
+      <body className="antialiased">
         <Providers>
-          <AuthWrapper>
-            {children}
-          </AuthWrapper>
+          {children}
         </Providers>
       </body>
     </html>
   );
 }
-
-export const metadata = {
-  title: 'TrotroLive',
-  description: 'Your trusted transport companion',
-};

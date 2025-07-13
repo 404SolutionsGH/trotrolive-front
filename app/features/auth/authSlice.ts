@@ -15,11 +15,11 @@ const initialState: AuthState = {
   error: null,
 };
 
-// Cookie configuration
+// Cookie configuration with better settings
 const cookieOptions = {
-  expires: 7, // 7 days
-  secure: process.env.NODE_ENV === 'development',
-  sameSite: 'lax' as const, // Fixed type assertion
+  expires: 30, // 30 days for better persistence
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax' as const,
   path: '/',
 };
 
@@ -51,8 +51,59 @@ const removeAuthTokens = () => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    localStorage.removeItem('civic_jwt');
+    localStorage.removeItem('user');
   }
 };
+
+// Check if user is authenticated on app start
+export const checkAuthStatus = createAsyncThunk(
+  'auth/checkAuthStatus',
+  async (_, { rejectWithValue }) => {
+    try {
+      const accessToken = Cookies.get('access_token') || localStorage.getItem('access_token');
+      
+      if (!accessToken) {
+        return { isAuthenticated: false, user: null };
+      }
+
+      // Verify token with backend
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts/api/token/verify/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token: accessToken }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return { isAuthenticated: true, user: data.user };
+      } else {
+        // Token is invalid, try to refresh
+        const refreshToken = Cookies.get('refresh_token') || localStorage.getItem('refresh_token');
+        if (refreshToken) {
+          try {
+            const refreshResponse = await refreshAccessToken(refreshToken);
+            if (refreshResponse?.access) {
+              setAuthTokens({ access: refreshResponse.access });
+              return { isAuthenticated: true, user: null }; // User data will be fetched separately
+            }
+          } catch (refreshError) {
+            console.error('Token refresh failed:', refreshError);
+          }
+        }
+        
+        // Clear invalid tokens
+        removeAuthTokens();
+        return { isAuthenticated: false, user: null };
+      }
+    } catch (error) {
+      console.error('Auth status check failed:', error);
+      return { isAuthenticated: false, user: null };
+    }
+  }
+);
 
 export const registerUser = createAsyncThunk(
   'auth/registerUser',
@@ -138,6 +189,8 @@ export const logoutUser = createAsyncThunk(
       return null;
     } catch (error) {
       console.error("Logout error: ", error);
+      // Even if logout API fails, clear local auth data
+      removeAuthTokens();
       return rejectWithValue('Logout failed');
     }
   }
@@ -148,7 +201,7 @@ export const refreshToken = createAsyncThunk(
   'auth/refreshToken',
   async (_, { rejectWithValue }) => {
     try {
-      const refreshToken = Cookies.get('refresh_token');
+      const refreshToken = Cookies.get('refresh_token') || localStorage.getItem('refresh_token');
 
       if (!refreshToken) {
         throw new Error('No refresh token available');
@@ -157,7 +210,7 @@ export const refreshToken = createAsyncThunk(
       const response = await refreshAccessToken(refreshToken);
 
       if (response && response.access) {
-        Cookies.set('access_token', response.access, cookieOptions);
+        setAuthTokens({ access: response.access });
       }
 
       return response;
@@ -178,12 +231,25 @@ const authSlice = createSlice({
       state.error = null;
     },
     checkAuth: (state) => {
-      const accessToken = Cookies.get('access_token');
+      const accessToken = Cookies.get('access_token') || localStorage.getItem('access_token');
       state.isAuthenticated = !!accessToken;
     },
   },
   extraReducers: (builder) => {
     builder
+      .addCase(checkAuthStatus.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(checkAuthStatus.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isAuthenticated = action.payload.isAuthenticated;
+        state.user = action.payload.user;
+      })
+      .addCase(checkAuthStatus.rejected, (state) => {
+        state.isLoading = false;
+        state.isAuthenticated = false;
+        state.user = null;
+      })
       .addCase(registerUser.pending, (state) => {
         state.isLoading = true;
         state.error = null;

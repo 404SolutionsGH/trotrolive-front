@@ -3,6 +3,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from "react";
+import { clearAllAuthState } from "@/app/lib/store/authUtils";
+import Cookies from 'js-cookie';
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ConnectionProvider,
@@ -20,7 +22,28 @@ const WalletPage = () => {
   const clientId = process.env.NEXT_PUBLIC_CIVIC_CLIENT_ID;
 
   useEffect(() => {
-    setIsClient(true); 
+    // Enhanced state clearing to prevent auth state persistence issues
+    const clearState = async () => {
+      console.log('[Login] Clearing authentication state...');
+      
+      // Clear all auth state in localStorage and cookies
+      clearAllAuthState();
+      
+      // Additional cleanup specific to Civic auth
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('civic_jwt');
+        localStorage.removeItem('auth-storage');
+        localStorage.removeItem('notification-storage');
+        Cookies.remove('access_token', { path: '/' });
+        Cookies.remove('refresh_token', { path: '/' });
+        Cookies.remove('csrftoken', { path: '/' });
+      }
+      
+      setIsClient(true);
+      console.log('[Login] Authentication state cleared successfully');
+    };
+    
+    clearState();
   }, []);
 
   if (!isClient) {
@@ -93,17 +116,41 @@ const ConnectionRedirect = () => {
     if (isAuthenticating || authCompleted || authAttempted.current) {
       return;
     }
+    
+    // Reset any previous state
     setStatus('authenticating');
     setIsAuthenticating(true);
     setError(null);
     authAttempted.current = true;
     setTimeoutReached(false);
+    
+    // Clear any existing authentication state to ensure a clean start
+    if (typeof window !== 'undefined') {
+      Cookies.remove('access_token', { path: '/' });
+      Cookies.remove('refresh_token', { path: '/' });
+      localStorage.removeItem('civic_jwt');
+    }
 
     (async () => {
       try {
         console.log('[Civic Login] Wallet connected:', publicKey?.toString());
         console.log('[Civic Login] Civic JWT:', idToken);
-        const response = await authApi.civicAuth(idToken);
+        
+        // Extract display mode from state parameter if present
+        const stateParam = searchParams.get('state');
+        let displayMode = 'default';
+        
+        if (stateParam) {
+          try {
+            const decodedState = JSON.parse(atob(stateParam));
+            displayMode = decodedState.displayMode || 'default';
+          } catch (e) {
+            console.error('[Civic Login] Failed to parse state parameter:', e);
+          }
+        }
+        
+        console.log('[Civic Login] Using display mode:', displayMode);
+        const response = await authApi.civicAuth(idToken, displayMode);
         console.log('[Civic Login] Civic Auth API response:', response);
         if (response.tokens && response.user) {
           setPublicKey(publicKey?.toString() || null);
@@ -111,8 +158,42 @@ const ConnectionRedirect = () => {
           setAuthCompleted(true);
           setStatus('success');
           // Redirect after successful authentication
-          const redirectPath = searchParams.get('redirect') || '/';
-          setTimeout(() => router.push(redirectPath), 500);
+          // Extract display mode from state parameter if present
+          const stateParam = searchParams.get('state');
+          let displayMode = 'default';
+          
+          if (stateParam) {
+            try {
+              const decodedState = JSON.parse(atob(stateParam));
+              displayMode = decodedState.displayMode || 'default';
+            } catch (e) {
+              console.error('[Civic Login] Failed to parse state parameter:', e);
+            }
+          }
+          
+          console.log('[Civic Login] Display mode:', displayMode);
+          
+          // Handle iframe display mode differently to prevent automatic logout
+          if (displayMode === 'iframe') {
+            // For iframe mode, use a different approach to prevent token loss
+            // Set a flag indicating successful authentication
+            window.localStorage.setItem('auth_completed', 'true');
+            
+            // Use postMessage to communicate with parent frame if needed
+            if (window.parent !== window) {
+              window.parent.postMessage({
+                type: 'CIVIC_AUTH_SUCCESS',
+                user: response.user
+              }, '*');
+            }
+            
+            // Don't redirect in iframe mode, as it can cause session loss
+            console.log('[Civic Login] Authentication successful in iframe mode');
+          } else {
+            // Normal redirect for non-iframe mode
+            const redirectPath = searchParams.get('redirect') || '/';
+            setTimeout(() => router.push(redirectPath), 500);
+          }
         } else {
           setStatus('error');
           setError('Unexpected response from authentication server.');

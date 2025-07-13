@@ -1,19 +1,14 @@
 import { Notification } from '@/lib/notification-store';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import { axiosInstance } from '../../../lib/store/axios';
 
 export class NotificationApi {
   static async fetchNotifications(): Promise<Notification[]> {
     try {
-      const response = await fetch(`${API_URL}/accounts/api/notifications/`, {
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch notifications');
-      }
-
-      const data = await response.json();
+      const response = await axiosInstance.get('/accounts/api/notifications/');
+      
+      console.log('Notifications response:', response);
+      
+      const data = response.data.notifications || [];
       return data.map((notification: any) => ({
         id: notification.id,
         type: notification.type as 'success' | 'error' | 'info' | 'warning',
@@ -29,20 +24,11 @@ export class NotificationApi {
 
   static async markAsRead(notificationId: string): Promise<void> {
     try {
-      const response = await fetch(
-        `${API_URL}/accounts/api/notifications/${notificationId}/mark_read/`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.post(
+        `/accounts/api/notifications/${notificationId}/mark_read/`
       );
-
-      if (!response.ok) {
-        throw new Error('Failed to mark notification as read');
-      }
+      
+      console.log('Mark as read response:', response);
     } catch (error) {
       console.error('Error marking notification as read:', error);
       throw error;
@@ -51,20 +37,11 @@ export class NotificationApi {
 
   static async markAllAsRead(): Promise<void> {
     try {
-      const response = await fetch(
-        `${API_URL}/accounts/api/notifications/mark_all_read/`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
+      const response = await axiosInstance.post(
+        '/accounts/api/notifications/mark_all_read/'
       );
-
-      if (!response.ok) {
-        throw new Error('Failed to mark all notifications as read');
-      }
+      
+      console.log('Mark all read response:', response);
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
       throw error;
