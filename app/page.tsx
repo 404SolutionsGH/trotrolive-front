@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { stations, generateAllPossibleTrips } from "@/data/dummy-data";
 import Link from "next/link";
+import { useQueryState,parseAsString } from 'nuqs';
 
 interface FeatureItemProps {
   icon: React.ReactNode;
@@ -54,9 +55,18 @@ export default function Home() {
     { id: 'accra', name: 'Accra' },
     { id: 'kumasi', name: 'Kumasi' },
   ];
-  const [selectedCity, setSelectedCity] = useState('');
-  const [startStation, setStartStation] = useState("");
-  const [destinationStation, setDestinationStation] = useState("");
+  const [selectedCity, setSelectedCity] = useQueryState(
+    'city',
+    parseAsString.withDefault('')
+  );
+  const [startStation, setStartStation] = useQueryState(
+    'startStation',
+    parseAsString.withDefault('')
+  );
+  const [destinationStation, setDestinationStation] = useQueryState(
+    'destinationStation',
+    parseAsString.withDefault('')
+  );
   const [errorMessage, setErrorMessage] = useState("");
   const [availableDestinations, setAvailableDestinations] = useState<typeof stations>([]);
   const router = useRouter();
@@ -66,7 +76,7 @@ export default function Home() {
     setStartStation("");
     setDestinationStation("");
     setAvailableDestinations([]);
-  }, [selectedCity]);
+  }, [selectedCity, setStartStation, setDestinationStation]);
 
   // Update available destinations when start station changes
   useEffect(() => {

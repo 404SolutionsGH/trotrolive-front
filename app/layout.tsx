@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Providers } from './providers';
 import './globals.css';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 export const metadata: Metadata = {
   title: 'TrotroLive - Your Smart Transportation Companion',
@@ -15,9 +16,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <Providers>
-          {children}
-        </Providers>
+        <NuqsAdapter>
+          <Providers>
+            {children}
+          </Providers>
+        </NuqsAdapter>
       </body>
     </html>
   );
