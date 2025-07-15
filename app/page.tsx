@@ -50,12 +50,24 @@ const ErrorCard: React.FC<ErrorCardProps> = ({ message, onClose }) => (
 );
 
 export default function Home() {
+  const cities = [
+    { id: 'accra', name: 'Accra' },
+    { id: 'kumasi', name: 'Kumasi' },
+  ];
+  const [selectedCity, setSelectedCity] = useState('');
   const [startStation, setStartStation] = useState("");
   const [destinationStation, setDestinationStation] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [availableDestinations, setAvailableDestinations] = useState<typeof stations>([]);
   const router = useRouter();
   
+  // Reset stations when city changes
+  useEffect(() => {
+    setStartStation("");
+    setDestinationStation("");
+    setAvailableDestinations([]);
+  }, [selectedCity]);
+
   // Update available destinations when start station changes
   useEffect(() => {
     if (startStation) {
@@ -123,6 +135,25 @@ export default function Home() {
             </h3>
         
             <div className="space-y-3 md:space-y-4">
+              {/* City Dropdown */}
+              <div className="flex flex-col space-y-1 md:space-y-2">
+                <label htmlFor="city-select" className="text-sm font-medium">
+                  City
+                </label>
+                <select
+                  id="city-select"
+                  className="flex-1 border border-gray-300 rounded-lg p-2"
+                  value={selectedCity}
+                  onChange={(e) => setSelectedCity(e.target.value)}
+                >
+                  <option value="">Select a city</option>
+                  {cities.map((city) => (
+                    <option key={city.id} value={city.id}>
+                      {city.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="flex flex-col space-y-1 md:space-y-2">
                 <label htmlFor="start-station" className="text-sm font-medium">
                   Start Station
@@ -132,6 +163,7 @@ export default function Home() {
                   className="flex-1 border border-gray-300 rounded-lg p-2"
                   value={startStation}
                   onChange={(e) => setStartStation(e.target.value)}
+                  disabled={!selectedCity}
                 >
                   <option value="">Select your start station</option>
                   {stations.map((station) => (
