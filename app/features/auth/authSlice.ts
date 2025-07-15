@@ -59,7 +59,7 @@ const removeAuthTokens = () => {
 // Check if user is authenticated on app start
 export const checkAuthStatus = createAsyncThunk(
   'auth/checkAuthStatus',
-  async (_, { rejectWithValue }) => {
+  async () => {
     try {
       const accessToken = Cookies.get('access_token') || localStorage.getItem('access_token');
       

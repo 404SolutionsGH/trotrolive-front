@@ -1,12 +1,10 @@
 "use client"
 
-import { useEffect } from "react";
 import { useAuthStore } from "@/lib/auth-store";
 import { NotificationButton } from "./notifications";
 
 interface User {
-  user: any; 
-  full_name?: string;
+  user: { full_name?: string } | null;
 }
 
 export function Header() {

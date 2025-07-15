@@ -39,13 +39,11 @@ export default function ContributePage() {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
-    watch
+    reset
   } = useForm<ContributionForm>({
     resolver: zodResolver(contributionSchema)
   });
 
-  const currentType = watch('contributionType');
 
   const onSubmit = async (data: ContributionForm) => {
     if (!isAuthenticated) {

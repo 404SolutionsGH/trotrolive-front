@@ -9,7 +9,7 @@ export class NotificationApi {
       console.log('Notifications response:', response);
       
       const data = response.data.notifications || [];
-      return data.map((notification: any) => ({
+      return data.map((notification: { id: string; type: string; message: string; read: boolean; created_at: string }) => ({
         id: notification.id,
         type: notification.type as 'success' | 'error' | 'info' | 'warning',
         message: notification.message,

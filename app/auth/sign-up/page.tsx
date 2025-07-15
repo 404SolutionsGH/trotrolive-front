@@ -18,7 +18,6 @@ const WalletPage = () => {
   const clientId = process.env.NEXT_PUBLIC_CIVIC_CLIENT_ID;
 
   useEffect(() => {
-    clearAllAuthState();
     setIsClient(true); // Set to true after the component mounts
   }, []);
 

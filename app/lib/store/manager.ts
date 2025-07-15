@@ -49,7 +49,7 @@ class TokenManager {
       console.error('Token refresh failed:', error);
 
       // Only clear auth if error is 401 or 403
-      const status = (error as any)?.response?.status;
+      const status = (error as { response?: { status: number } })?.response?.status;
       if (status === 401 || status === 403) {
         this.clearAuthData();
       }
