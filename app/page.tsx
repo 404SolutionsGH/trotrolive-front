@@ -60,24 +60,17 @@ export default function Home() {
     parseAsString.withDefault('')
   );
   const [startStation, setStartStation] = useQueryState(
-    'startStation',
+    'start',
     parseAsString.withDefault('')
   );
   const [destinationStation, setDestinationStation] = useQueryState(
-    'destinationStation',
+    'destination',
     parseAsString.withDefault('')
   );
   const [errorMessage, setErrorMessage] = useState("");
   const [availableDestinations, setAvailableDestinations] = useState<typeof stations>([]);
   const router = useRouter();
   
-  // Reset stations when city changes
-  useEffect(() => {
-    setStartStation("");
-    setDestinationStation("");
-    setAvailableDestinations([]);
-  }, [selectedCity, setStartStation, setDestinationStation]);
-
   // Update available destinations when start station changes
   useEffect(() => {
     if (startStation) {
@@ -112,7 +105,7 @@ export default function Home() {
 
     if (matchingTrip) {
       router.push(
-        `/trips?start=${startStation}&destination=${destinationStation}`
+        `/trips?start=${startStation}&destination=${destinationStation}&city=${selectedCity}`
       );
     } else {
       setErrorMessage("No trips found for the selected stations.");
