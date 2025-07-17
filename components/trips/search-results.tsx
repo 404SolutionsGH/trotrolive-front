@@ -9,6 +9,9 @@ import dynamic from "next/dynamic";
 import Input from "@/components/ui/input";
 import { useQueryState, parseAsString } from "nuqs";
 import Link from "next/link";
+import { useAtomValue } from "jotai";
+import { stationsAtom } from "@/states/stations";
+import StationComboBox from "@/components/StationComboBox";
 
 const MapComponent = dynamic(() => import("@/components/trips/map"), {
   ssr: false,
@@ -22,6 +25,9 @@ const MapComponent = dynamic(() => import("@/components/trips/map"), {
 export default function SearchResults() {
   const [selectedTransport, setSelectedTransport] = useState("trotro");
   const [selectedCity] = useQueryState("city", parseAsString.withDefault(""));
+
+  const stations = useAtomValue(stationsAtom);
+
   const [startStation, setStartStation] = useQueryState(
     "start",
     parseAsString.withDefault(""),
@@ -30,27 +36,6 @@ export default function SearchResults() {
     "destination",
     parseAsString.withDefault(""),
   );
-
-  const stations = [
-    {
-      name: "Tsui Bleoo Station",
-      location: "Teshi",
-      rating: 3.2,
-      status: "Closed",
-    },
-    {
-      name: "Tsui Bleoo Station",
-      location: "Teshi",
-      rating: 3.2,
-      status: "Closed",
-    },
-    {
-      name: "Tsui Bleoo Station",
-      location: "Teshi",
-      rating: 3.2,
-      status: "Closed",
-    },
-  ];
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -89,23 +74,24 @@ export default function SearchResults() {
 
           <div className="bg-pink-50 p-4 rounded-lg space-y-4">
             <div className="relative">
-              <div className="absolute left-3 top-3 w-3 h-3 bg-purple-600 rounded-full"></div>
-              <div className="absolute left-4 top-8 w-1 h-6 border-l-2 border-dashed border-purple-300"></div>
-              <Input
-                placeholder="From"
-                className="pl-10 bg-white border-gray-200"
+              <StationComboBox
+                label="From"
+                id="from-station"
                 value={startStation}
-                onChange={(e) => setStartStation(e.target.value)}
+                onChange={setStartStation}
+                options={stations}
+                leftIcon={<span className="w-3 h-3 bg-purple-600 rounded-full block" />}
               />
             </div>
 
             <div className="relative">
-              <Bus className="absolute left-3 top-3 w-3 h-3 text-purple-600" />
-              <Input
-                placeholder="Destination"
-                className="pl-10 bg-white border-gray-200"
+              <StationComboBox
+                label="Destination"
+                id="destination-station"
                 value={destinationStation}
-                onChange={(e) => setDestinationStation(e.target.value)}
+                onChange={setDestinationStation}
+                options={stations}
+                leftIcon={<Bus className="w-3 h-3 text-purple-600" />}
               />
             </div>
           </div>
@@ -190,19 +176,19 @@ export default function SearchResults() {
                         {station.name}
                       </h4>
                       <p className="text-sm text-gray-600 mb-2">
-                        {station.location}
+                        {station.station_address}
                       </p>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1">
                           <span className="text-sm font-medium">
-                            {station.rating}
+                            {/* {station.rating} */} 0
                           </span>
                           <div className="flex">
                             {[1, 2, 3, 4, 5].map((star) => (
                               <Star
                                 key={star}
                                 className={`w-3 h-3 ${
-                                  star <= Math.floor(station.rating)
+                                  star <= Math.floor(0)
                                     ? "text-yellow-400 fill-current"
                                     : "text-gray-300"
                                 }`}
@@ -211,7 +197,7 @@ export default function SearchResults() {
                           </div>
                         </div>
                         <Badge variant="secondary" className="text-xs">
-                          {station.status}
+                          {/* {station.} */}
                         </Badge>
                       </div>
                     </div>
