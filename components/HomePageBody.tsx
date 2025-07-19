@@ -69,37 +69,59 @@ interface Props {
   stations: StationsApiResponse["results"];
 }
 
-export default function HomePageBody({ stations }: Props) {
+export default function HomePageBody() {
   const cities = [
     { id: "accra", name: "Accra" },
     { id: "kumasi", name: "Kumasi" },
   ];
   const [selectedCity, setSelectedCity] = useQueryState(
     "city",
-    parseAsString.withDefault(""),
+    parseAsString.withDefault("")
   );
   const [startStation, setStartStation] = useQueryState(
     "start",
-    parseAsString.withDefault(""),
+    parseAsString.withDefault("")
   );
   const [destinationStation, setDestinationStation] = useQueryState(
     "destination",
-    parseAsString.withDefault(""),
+    parseAsString.withDefault("")
   );
   const [errorMessage, setErrorMessage] = useState("");
+  const [stations, setStations] = useState<Station[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState("");
   const router = useRouter();
+  const setStationsAtom = useSetAtom(stationsAtom);
 
-  const setStations = useSetAtom(stationsAtom);
+  useEffect(() => {
+    if (!selectedCity) {
+      setStations([]);
+      return;
+    }
+    setLoading(true);
+    setFetchError("");
+    fetch(`https://api.trotro.live/api/stations/by_city/?city=${selectedCity}&format=json`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error("Failed to fetch stations");
+        const data: StationsApiResponse = await res.json();
+        setStations(data.results);
+      })
+      .catch((err) => {
+        setFetchError("Failed to fetch stations for the selected city.");
+        setStations([]);
+      })
+      .finally(() => setLoading(false));
+  }, [selectedCity]);
 
   const handleCheckFare = () => {
     if (!startStation || !destinationStation) {
       setErrorMessage("Please select both start and destination stations.");
       return;
     }
-    setStations(stations);
-      router.push(
-        `/trips?start=${startStation}&destination=${destinationStation}&city=${selectedCity}`,
-      );
+    setStationsAtom(stations);
+    router.push(
+      `/trips?start=${startStation}&destination=${destinationStation}&city=${selectedCity}`
+    );
   };
 
   return (
@@ -107,6 +129,10 @@ export default function HomePageBody({ stations }: Props) {
       {/* Error Message */}
       {errorMessage && (
         <ErrorCard message={errorMessage} onClose={() => setErrorMessage("")} />
+      )}
+      {/* Fetch Error */}
+      {fetchError && (
+        <ErrorCard message={fetchError} onClose={() => setFetchError("")} />
       )}
       {/* Hero Section */}
       <section className="relative">
@@ -143,25 +169,32 @@ export default function HomePageBody({ stations }: Props) {
                 ))}
               </select>
             </div>
-            <StationComboBox
-              label="Start Station"
-              id="start-station"
-              value={startStation}
-              onChange={setStartStation}
-              options={stations}
-              disabled={!selectedCity}
-            />
-            <StationComboBox
-              label="Destination Station"
-              id="destination-station"
-              value={destinationStation}
-              onChange={setDestinationStation}
-              options={stations}
-              disabled={!startStation}
-            />
+            {loading ? (
+              <div className="text-center py-4 text-gray-500">Loading stations...</div>
+            ) : (
+              <>
+                <StationComboBox
+                  label="Start Station"
+                  id="start-station"
+                  value={startStation}
+                  onChange={setStartStation}
+                  options={stations}
+                  disabled={!selectedCity}
+                />
+                <StationComboBox
+                  label="Destination Station"
+                  id="destination-station"
+                  value={destinationStation}
+                  onChange={setDestinationStation}
+                  options={stations}
+                  disabled={!startStation}
+                />
+              </>
+            )}
             <Button
               className="w-full bg-pink-500 hover:bg-pink-600"
               onClick={handleCheckFare}
+              disabled={loading || !selectedCity}
             >
               Check Fare Now
             </Button>
