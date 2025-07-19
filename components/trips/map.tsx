@@ -12,7 +12,7 @@ function loadLeaflet(): Promise<any> {
   if ((window as any).L) return Promise.resolve((window as any).L)
 
   return new Promise((resolve, reject) => {
-    /* 1 – CSS */
+    /* 1 – CSS */
     if (!document.querySelector("link[data-leaflet]")) {
       const link = document.createElement("link")
       link.setAttribute("data-leaflet", "true")
@@ -21,7 +21,7 @@ function loadLeaflet(): Promise<any> {
       document.head.appendChild(link)
     }
 
-    /* 2 – JS */
+    /* 2 – JS */
     const script = document.createElement("script")
     script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     script.async = true
@@ -46,9 +46,63 @@ function makeIcon(L: any, hex: string) {
   })
 }
 
-export default function Map() {
+/* SVG start marker helper */
+function makeStartIcon(L: any) {
+  return L.icon({
+    iconUrl: `data:image/svg+xml;base64,${btoa(`
+      <svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="15" cy="15" r="12" fill="#10b981" stroke="white" stroke-width="3"/>
+        <text x="15" y="20" text-anchor="middle" fill="white" font-size="12" font-weight="bold">S</text>
+      </svg>
+    `)}`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -15],
+  })
+}
+
+/* SVG destination marker helper */
+function makeDestinationIcon(L: any) {
+  return L.icon({
+    iconUrl: `data:image/svg+xml;base64,${btoa(`
+      <svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="15" cy="15" r="12" fill="#ef4444" stroke="white" stroke-width="3"/>
+        <text x="15" y="20" text-anchor="middle" fill="white" font-size="12" font-weight="bold">D</text>
+      </svg>
+    `)}`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -15],
+  })
+}
+
+interface MapProps {
+  startStation?: {
+    id: number;
+    name: string;
+    station_address: string;
+    station_latitude: string;
+    station_longitude: string;
+    image_url: string;
+    is_bus_stop: boolean;
+    gtfs_source: string;
+  } | null;
+  destinationStation?: {
+    id: number;
+    name: string;
+    station_address: string;
+    station_latitude: string;
+    station_longitude: string;
+    image_url: string;
+    is_bus_stop: boolean;
+    gtfs_source: string;
+  } | null;
+}
+
+export default function Map({ startStation, destinationStation }: MapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<any>(null)
+  const routeLayerRef = useRef<any>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -66,15 +120,15 @@ export default function Map() {
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         }).addTo(map)
 
+        // Create a layer group for route elements
+        const routeLayer = L.layerGroup().addTo(map)
+        routeLayerRef.current = routeLayer
+
         const purple = makeIcon(L, "#9333ea")
         const pink = makeIcon(L, "#ec4899")
 
         const spots = [
-          { n: "Burma Camp", p: [5.62, -0.165], i: purple },
-          { n: "Burma Hills", p: [5.625, -0.16], i: purple },
-          { n: "Labadi", p: [5.58, -0.15], i: pink },
-          { n: "Tsui Bleoo Station", p: [5.59, -0.14], i: pink },
-          { n: "Current – Amanfro (Kasoa)", p: [5.55, -0.42], i: purple },
+          // { n: "Burma Camp", p: [5.62, -0.165], i: purple },
         ] as const
 
         spots.forEach(({ n, p, i }) =>
@@ -93,6 +147,72 @@ export default function Map() {
       mapRef.current?.remove()
     }
   }, [])
+
+  // Handle route updates when start/destination stations change
+  useEffect(() => {
+    if (!mapRef.current || !routeLayerRef.current) return
+
+    const L = (window as any).L
+    if (!L) return
+
+    // Clear existing route
+    routeLayerRef.current.clearLayers()
+
+    // If both start and destination are provided, draw the route
+    if (startStation && destinationStation) {
+      const startLat = parseFloat(startStation.station_latitude)
+      const startLng = parseFloat(startStation.station_longitude)
+      const destLat = parseFloat(destinationStation.station_latitude)
+      const destLng = parseFloat(destinationStation.station_longitude)
+
+      // Check if coordinates are valid
+      if (!isNaN(startLat) && !isNaN(startLng) && !isNaN(destLat) && !isNaN(destLng)) {
+        const startIcon = makeStartIcon(L)
+        const destIcon = makeDestinationIcon(L)
+
+        // Add start marker
+        const startMarker = L.marker([startLat, startLng], { icon: startIcon })
+          .addTo(routeLayerRef.current)
+          .bindPopup(`<strong>Start: ${startStation.name}</strong><br>${startStation.station_address}`)
+
+        // Add destination marker
+        const destMarker = L.marker([destLat, destLng], { icon: destIcon })
+          .addTo(routeLayerRef.current)
+          .bindPopup(`<strong>Destination: ${destinationStation.name}</strong><br>${destinationStation.station_address}`)
+
+        // Draw route line
+        const routeLine = L.polyline(
+          [[startLat, startLng], [destLat, destLng]],
+          {
+            color: '#9333ea',
+            weight: 4,
+            opacity: 0.8,
+            dashArray: '10, 10'
+          }
+        ).addTo(routeLayerRef.current)
+
+        // Add route info popup at midpoint
+        const midLat = (startLat + destLat) / 2
+        const midLng = (startLng + destLng) / 2
+        const routeInfo = L.popup({
+          closeButton: false,
+          autoClose: false,
+          closeOnClick: false
+        })
+          .setLatLng([midLat, midLng])
+          .setContent(`
+            <div style="text-align: center; font-weight: bold; color: #9333ea;">
+              Route: ${startStation.name} → ${destinationStation.name}
+            </div>
+          `)
+          .addTo(routeLayerRef.current)
+
+        // Fit map to show the entire route
+        const bounds = L.latLngBounds([[startLat, startLng], [destLat, destLng]])
+        mapRef.current.fitBounds(bounds, { padding: [20, 20] })
+      }
+    }
+  }, [startStation, destinationStation])
 
   return <div ref={containerRef} className="h-full w-full" />
 }

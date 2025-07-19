@@ -13,6 +13,45 @@ import { useAtomValue } from "jotai";
 import { stationsAtom } from "@/states/stations";
 import StationComboBox from "@/components/StationComboBox";
 
+// Utility function to calculate distance between two coordinates (Haversine formula)
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Radius of the Earth in kilometers
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+// Utility function to calculate estimated travel time
+function calculateTravelTime(distance: number): { min: number; max: number } {
+  // Average trotro speed: 20-30 km/h in city traffic
+  const avgSpeedMin = 20; // km/h
+  const avgSpeedMax = 30; // km/h
+  
+  const timeMin = (distance / avgSpeedMin) * 60; // Convert to minutes
+  const timeMax = (distance / avgSpeedMax) * 60; // Convert to minutes
+  
+  return {
+    min: Math.round(timeMin),
+    max: Math.round(timeMax)
+  };
+}
+
+// Utility function to calculate estimated fare
+function calculateFare(distance: number): number {
+  // Base fare: 2 GHS for first 2km
+  // Additional fare: 0.5 GHS per km after 2km
+  const baseFare = 2;
+  const additionalKm = Math.max(0, distance - 2);
+  const additionalFare = additionalKm * 0.5;
+  
+  return Math.round((baseFare + additionalFare) * 10) / 10; // Round to 1 decimal place
+}
+
 const MapComponent = dynamic(() => import("@/components/trips/map"), {
   ssr: false,
   loading: () => (
@@ -36,6 +75,26 @@ export default function SearchResults() {
     "destination",
     parseAsString.withDefault(""),
   );
+
+  // Find the actual station objects based on selected names
+  const startStationObj = stations.find(station => station.id == Number(startStation)) || null;
+  const destinationStationObj = stations.find(station => station.id == Number(destinationStation)) || null;
+
+  // Calculate distance if both stations are selected
+  const routeDistance = startStationObj && destinationStationObj 
+    ? calculateDistance(
+        parseFloat(startStationObj.station_latitude),
+        parseFloat(startStationObj.station_longitude),
+        parseFloat(destinationStationObj.station_latitude),
+        parseFloat(destinationStationObj.station_longitude)
+      )
+    : null;
+
+  // Calculate travel time if distance is available
+  const travelTime = routeDistance ? calculateTravelTime(routeDistance) : null;
+
+  // Calculate fare if distance is available
+  const estimatedFare = routeDistance ? calculateFare(routeDistance) : 35;
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -131,21 +190,53 @@ export default function SearchResults() {
         {/* Ride Details */}
         <div className="px-4 mb-6">
           <h3 className="font-semibold mb-3">Ride Details</h3>
-          <div className="flex items-center gap-2 text-gray-600">
-            <Clock className="w-4 h-4" />
-            <span className="font-medium">Ride Duration</span>
-          </div>
-          <div className="flex items-center gap-2 mt-1">
-            <Clock className="w-4 h-4 text-purple-600" />
-            <span className="font-semibold">30-45 mins</span>
-          </div>
+          
+          {startStationObj && destinationStationObj ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-gray-600">
+                <Clock className="w-4 h-4" />
+                <span className="font-medium">Route Duration</span>
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                <Clock className="w-4 h-4 text-purple-600" />
+                <span className="font-semibold">
+                  {travelTime ? `${travelTime.min}-${travelTime.max} mins` : '30-45 mins'}
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-2 text-gray-600">
+                <MapPin className="w-4 h-4" />
+                <span className="font-medium">Route Distance</span>
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                <MapPin className="w-4 h-4 text-purple-600" />
+                <span className="font-semibold">
+                  {routeDistance ? `${routeDistance.toFixed(1)} km` : '~12.5 km'}
+                </span>
+              </div>
+              
+              <div className="bg-purple-50 p-3 rounded-lg">
+                <div className="text-sm font-medium text-purple-800 mb-1">Route Summary</div>
+                <div className="text-xs text-purple-600">
+                  {startStationObj.name} → {destinationStationObj.name}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-gray-600">
+              <Clock className="w-4 h-4" />
+              <span className="font-medium">Ride Duration</span>
+            </div>
+          )}
         </div>
 
         {/* Total Price */}
         <div className="px-4 mt-auto mb-4">
           <div className="bg-purple-600 text-white p-4 rounded-lg flex justify-between items-center">
             <span className="text-lg font-semibold">Total</span>
-            <span className="text-2xl font-bold">Ghc 35</span>
+            <span className="text-2xl font-bold">
+              Ghc {estimatedFare}
+            </span>
           </div>
         </div>
       </div>
@@ -154,7 +245,10 @@ export default function SearchResults() {
       <div className="flex-1 relative">
         {/* Map Area */}
         <div className="h-2/3 relative">
-          <MapComponent />
+          <MapComponent 
+            startStation={startStationObj}
+            destinationStation={destinationStationObj}
+          />
         </div>
 
         {/* Stations Section */}
@@ -164,7 +258,7 @@ export default function SearchResults() {
           </h3>
 
           <div className="flex gap-4 overflow-x-auto pb-4">
-            {stations.map((station, index) => (
+            {stations.slice(0,3).map((station, index) => (
               <Card key={index} className="min-w-64 shadow-sm">
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
