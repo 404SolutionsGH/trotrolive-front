@@ -120,28 +120,19 @@ export default function SearchResults() {
             <span className="text-xl font-bold text-gray-800">Trotro</span>
           </div>
 
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <MapPin className="w-4 h-4 text-purple-600" />
-            <div>
-              <div className="font-medium">Location</div>
-              <div>Ahodwo</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Location Section */}
-        <div className="p-4">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center gap-2">
             <Link
-              href={`
-        /?start=${startStation}&destination=${destinationStation}&city=${selectedCity}`}
+              href={`/?start=${startStation}&destination=${destinationStation}&city=${selectedCity}`}
               aria-label="Back to home"
             >
               <ArrowLeft className="w-5 h-5 text-gray-600 cursor-pointer" />
             </Link>
             <h2 className="text-lg font-semibold">{selectedCity}</h2>
           </div>
+        </div>
 
+        {/* Location Section */}
+        <div className="p-4">
           <div className="bg-pink-50 p-4 rounded-lg space-y-4">
             <div className="relative">
               <StationComboBox
