@@ -298,8 +298,6 @@ export default function HomePageBody() {
       <section id="contact" className="py-8 md:py-16">
         <Support />
       </section>
-      {/* Footer */}
-      <Footer />
     </main>
   );
 }
