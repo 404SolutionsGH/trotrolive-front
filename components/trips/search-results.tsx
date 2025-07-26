@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, MapPin, Star, Clock, Car, Bus } from "lucide-react";
+import { ArrowLeft, MapPin, Star, Clock, Car, Bus, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -71,6 +71,7 @@ const MapComponent = dynamic(() => import("@/components/trips/map"), {
 export default function SearchResults() {
   const [selectedTransport, setSelectedTransport] = useState("trotro");
   const [selectedCity] = useQueryState("city", parseAsString.withDefault(""));
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const stations = useAtomValue(stationsAtom);
 
@@ -108,12 +109,49 @@ export default function SearchResults() {
   const estimatedFare = routeDistance ? calculateFare(routeDistance) : 35;
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Left Sidebar */}
-      <div className="w-96 bg-white shadow-lg flex flex-col">
-        {/* Header */}
-        <div className="p-4 border-b">
-          <div className="flex items-center gap-3 mb-4">
+    <div className="flex flex-col lg:flex-row h-screen bg-gray-100">
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-white shadow-sm border-b relative z-[60]">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
+              <Bus className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-lg font-bold text-gray-800">Trotro</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            >
+              {isSidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Sidebar - Mobile Overlay / Desktop Sidebar */}
+      <div className={`
+        ${isSidebarOpen ? 'fixed inset-0 z-[80] lg:relative lg:z-auto' : 'hidden lg:block'}
+        lg:w-96 bg-white shadow-lg flex flex-col z-[80]
+      `}>
+        {/* Mobile Close Button */}
+        <div className="lg:hidden flex justify-end p-4 border-b">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
+
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto">
+          {/* Header */}
+          <div className="p-4 border-b">
+            <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
               <Bus className="w-6 h-6 text-white" />
             </div>
@@ -240,8 +278,10 @@ export default function SearchResults() {
           )}
         </div>
 
+        </div>
+
         {/* Total Price */}
-        <div className="px-4 mt-auto mb-4">
+        <div className="px-4 py-4 border-t bg-white">
           <div className="bg-purple-600 text-white p-4 rounded-lg flex justify-between items-center">
             <span className="text-lg font-semibold">Total</span>
             <span className="text-2xl font-bold">Ghc {estimatedFare}</span>
@@ -250,9 +290,9 @@ export default function SearchResults() {
       </div>
 
       {/* Map and Stations */}
-      <div className="flex-1 relative">
+      <div className="flex-1 relative flex flex-col z-[10]">
         {/* Map Area */}
-        <div className="h-2/3 relative">
+        <div className="h-64 lg:h-2/3 relative z-[10]">
           <MapComponent
             key={`${startStation}-${destinationStation}`}
             startStation={startStationObj}
@@ -261,24 +301,24 @@ export default function SearchResults() {
         </div>
 
         {/* Stations Section */}
-        <div className="h-1/3 bg-white p-6 overflow-y-auto">
+        <div className="flex-1 lg:h-1/3 bg-white p-4 lg:p-6 overflow-y-auto">
           <h3 className="text-lg font-semibold mb-4 text-purple-600">
             Lorry Stations Near You
           </h3>
 
-          <div className="flex gap-4 overflow-x-auto pb-4">
-            {stations.slice(0, 3).map((station, index) => (
-              <Card key={index} className="min-w-64 shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto">
+            {stations.slice(0, 6).map((station, index) => (
+              <Card key={index} className="shadow-sm">
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 bg-purple-100 rounded flex items-center justify-center">
                       <Bus className="w-4 h-4 text-purple-600" />
                     </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-purple-600 mb-1">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-purple-600 mb-1 truncate">
                         {station.name}
                       </h4>
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className="text-sm text-gray-600 mb-2 overflow-hidden text-ellipsis whitespace-nowrap">
                         {station.station_address}
                       </p>
                       <div className="flex items-center justify-between">
@@ -311,6 +351,15 @@ export default function SearchResults() {
           </div>
         </div>
       </div>
+
+      {/* Mobile Overlay Background */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-[75] lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+          style={{ touchAction: 'none' }}
+        />
+      )}
     </div>
   );
 }

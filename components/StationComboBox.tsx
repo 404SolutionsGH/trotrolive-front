@@ -55,12 +55,13 @@ export default function StationComboBox({
             disabled={disabled}
             id={id}
             className={cn(
-              "w-full border border-gray-300 rounded-lg p-2 text-left flex items-center justify-between",
+              "w-full border border-gray-300 rounded-lg p-3 text-left flex items-center justify-between bg-white",
               leftIcon && "pl-10",
               disabled && "opacity-50 cursor-not-allowed",
+              "focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent",
             )}
           >
-            <span>
+            <span className="text-sm">
               {selectedStation
                 ? selectedStation.name
                 : `Select your ${label.toLowerCase()}`}
@@ -69,10 +70,19 @@ export default function StationComboBox({
           </button>
         </PopoverTrigger>
 
-        <PopoverContent className="p-0 w-full">
+        <PopoverContent 
+          className="p-0 w-[var(--radix-popover-trigger-width)] max-h-[300px] overflow-hidden z-[90]"
+          side="bottom"
+          align="start"
+          sideOffset={4}
+          avoidCollisions={true}
+        >
           <Command>
-            <CommandInput placeholder={`Search ${label.toLowerCase()}...`} />
-            <CommandList>
+            <CommandInput 
+              placeholder={`Search ${label.toLowerCase()}...`} 
+              className="border-0 focus:ring-0"
+            />
+            <CommandList className="max-h-[250px] overflow-y-auto">
               <CommandEmpty>No match found.</CommandEmpty>
               {options.map((station) => (
                 <CommandItem
@@ -82,6 +92,7 @@ export default function StationComboBox({
                     onChange(station.id.toString());
                     setOpen(false);
                   }}
+                  className="cursor-pointer hover:bg-purple-50 focus:bg-purple-50"
                 >
                   {station.name}
                 </CommandItem>
@@ -90,7 +101,7 @@ export default function StationComboBox({
           </Command>
         </PopoverContent>
       </Popover>
-      <span className="absolute left-3 top-7 flex justify-center items-center pointer-events-none">
+      <span className="absolute left-3 top-8 flex justify-center items-center pointer-events-none">
         {leftIcon}
       </span>
     </div>
