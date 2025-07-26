@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useAtomValue } from "jotai";
 import { stationsAtom } from "@/states/stations";
 import StationComboBox from "@/components/StationComboBox";
+import Image from "next/image"
 
 // Utility function to calculate distance between two coordinates (Haversine formula)
 function calculateDistance(
@@ -114,11 +115,15 @@ export default function SearchResults() {
       <div className="lg:hidden bg-white shadow-sm border-b relative z-[60]">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-              <Bus className="w-5 h-5 text-white" />
-            </div>
-            <span className="text-lg font-bold text-gray-800">Trotro</span>
-          </div>
+          <Link href="/" prefetch={true} className="font-bold">
+            <Image
+              src="/assets/logo.png"
+              alt="Logo"
+              unoptimized={true}
+              width={50}
+              height={50}
+             />
+          </Link>          </div>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -151,12 +156,15 @@ export default function SearchResults() {
         <div className="flex-1 overflow-y-auto">
           {/* Header */}
           <div className="p-4 border-b">
-            <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-              <Bus className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-xl font-bold text-gray-800">Trotro</span>
-          </div>
+          <Link href="/" prefetch={true} className="font-bold">
+            <Image
+              src="/assets/logo.png"
+              alt="Logo"
+              unoptimized={true}
+              width={50}
+              height={50}
+             />
+          </Link>
 
           <div className="flex items-center gap-2">
             <Link
