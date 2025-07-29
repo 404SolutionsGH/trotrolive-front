@@ -50,7 +50,7 @@ const WalletPage = () => {
     return null;
   }
 
-  const endpoint = "https://api.devnet.solana.com";
+  const endpoint = "https://api.mainnet-beta.solana.com";
 
   return (
     <main className="overflow-x-hidden overflow-y-hidden">
