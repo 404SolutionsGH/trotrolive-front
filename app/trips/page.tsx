@@ -2,29 +2,133 @@
 
 import { useSearchParams } from "next/navigation";
 import { generateAllPossibleTrips } from "@/data/dummy-data";
+import { TripsApi, type TripSearchRequest } from "@/lib/api/trips";
 import Footer from "@/components/footer";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 
 export default function TripsPage() {
   const searchParams = useSearchParams();
   const startStation = searchParams.get("start");
   const destination = searchParams.get("destination");
-
-  // Use the function to get all possible trips
-  const allTrips = generateAllPossibleTrips();
   
-  const matchedTrips = allTrips.filter(
-    (trip) =>
-      trip.start_station.id.toString() === startStation &&
-      trip.destination.id.toString() === destination
-  );
+  const [matchedTrips, setMatchedTrips] = useState<any[]>([]);
+  const [tripsNext, setTripsNext] = useState<string | null>(null); // For pagination
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadTrips = async () => {
+      if (!startStation || !destination) {
+        setError("Missing start or destination station");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Try to search trips using API first
+        const searchParams: TripSearchRequest = {
+          start_station: parseInt(startStation),
+          destination: parseInt(destination),
+        };
+
+        // Support for paginated results in the future
+        const apiTrips = await TripsApi.searchTrips(searchParams);
+        // If paginated, handle apiTrips.results and apiTrips.next
+        if (Array.isArray(apiTrips)) {
+          setMatchedTrips(apiTrips);
+          setTripsNext(null); // No pagination yet
+        } else if (apiTrips && apiTrips.results) {
+          setMatchedTrips(apiTrips.results);
+          setTripsNext(apiTrips.next || null);
+        } else {
+          // If API returns no results, fall back to mock data
+          const allTrips = generateAllPossibleTrips();
+          const mockMatchedTrips = allTrips.filter(
+            (trip) =>
+              trip.start_station.id.toString() === startStation &&
+              trip.destination.id.toString() === destination
+          );
+          setMatchedTrips(mockMatchedTrips);
+          setTripsNext(null);
+        }
+      } catch (error) {
+        console.warn('Using mock trips due to API error:', error);
+        // Fallback to mock data
+        const allTrips = generateAllPossibleTrips();
+        const mockMatchedTrips = allTrips.filter(
+          (trip) =>
+            trip.start_station.id.toString() === startStation &&
+            trip.destination.id.toString() === destination
+        );
+        setMatchedTrips(mockMatchedTrips);
+        setTripsNext(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTrips();
+  }, [startStation, destination]);
+
+  // Handler to load more trips (pagination)
+  const handleLoadMoreTrips = async () => {
+    if (!tripsNext) return;
+    try {
+      setLoadingMore(true);
+      // In the future, TripsApi.searchTrips can accept a nextUrl for pagination
+      // For now, just a placeholder
+      // const resp = await TripsApi.searchTrips({ nextUrl: tripsNext });
+      // setMatchedTrips((prev) => [...prev, ...resp.results]);
+      // setTripsNext(resp.next || null);
+    } catch (error) {
+      setError('Failed to load more trips.');
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   // Format transport type for display
   const formatTransportType = (type: string) => {
     return type.charAt(0).toUpperCase() + type.slice(1);
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <main className="flex-1 container mx-auto py-8 md:py-16 px-4 mb-24">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500"></div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <main className="flex-1 container mx-auto py-8 md:py-16 px-4 mb-24">
+          <div className="text-center py-12 bg-gray-50 rounded-lg">
+            <p className="text-lg text-red-600 mb-4">{error}</p>
+            <Button asChild className="bg-pink-500 hover:bg-pink-600">
+              <Link href="/">
+                Back to Home
+              </Link>
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -97,6 +201,17 @@ export default function TripsPage() {
                 </div>
               ))}
             </div>
+            {/* Pagination: Load more trips button if available */}
+            {tripsNext && (
+              <Button
+                type="button"
+                className="mt-4 bg-pink-100 text-pink-800 hover:bg-pink-200"
+                onClick={handleLoadMoreTrips}
+                disabled={loadingMore}
+              >
+                {loadingMore ? "Loading more..." : "Load More Trips"}
+              </Button>
+            )}
           </div>
         ) : (
           <div className="text-center py-12 bg-gray-50 rounded-lg">
@@ -114,7 +229,7 @@ export default function TripsPage() {
 
       {/* Disclaimer */}
       <div className="text-center text-xs text-gray-500 px-4 mb-24">
-        Disclaimer: Trip results are dummy data and for demo purposes only.
+        Disclaimer: Trip results may include dummy data when API is unavailable.
       </div>
 
       {/* Footer */}

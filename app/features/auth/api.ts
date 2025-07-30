@@ -14,7 +14,7 @@ export const authApi = {
   civicAuth: async (civicToken: string): Promise<AuthResponse> => {
     try {
       const response = await axiosInstance.post('accounts/api/civic-auth/', {
-        civic_token: civicToken,
+        civic_jwt: civicToken,
       }, {
         withCredentials: true,
         headers: {
@@ -175,7 +175,7 @@ export const refreshAccessToken = async (refreshToken: string): Promise<{ access
       throw new Error('No refresh token found');
     }
 
-    const response = await fetch('http://localhost:8000/accounts/api/token/refresh/', {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts/api/token/refresh/`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh: refreshToken }),

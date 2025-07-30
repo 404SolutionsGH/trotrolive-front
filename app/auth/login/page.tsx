@@ -27,6 +27,23 @@ const WalletPage = () => {
     return null;
   }
 
+  // Check if Civic client ID is configured
+  if (!clientId) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[url(https://i.imgur.com/h6v4f1k.jpg)]">
+        <div className="bg-white p-8 rounded-lg shadow-lg">
+          <h1 className="text-2xl font-bold mb-4 text-red-600">Configuration Error</h1>
+          <p className="text-gray-600 mb-4">
+            Civic Client ID is not configured. Please set the NEXT_PUBLIC_CIVIC_CLIENT_ID environment variable.
+          </p>
+          <p className="text-sm text-gray-500">
+            Create a .env.local file with: NEXT_PUBLIC_CIVIC_CLIENT_ID=your_client_id_here
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const endpoint = "https://api.devnet.solana.com";
 
   return (
@@ -103,21 +120,29 @@ const ConnectionRedirect = () => {
       try {
         console.log('[Civic Login] Wallet connected:', publicKey?.toString());
         console.log('[Civic Login] Civic JWT:', idToken);
+        console.log('[Civic Login] Client ID:', process.env.NEXT_PUBLIC_CIVIC_CLIENT_ID);
+        console.log('[Civic Login] API URL:', process.env.NEXT_PUBLIC_API_URL);
+        
         const response = await authApi.civicAuth(idToken);
         console.log('[Civic Login] Civic Auth API response:', response);
+        
         if (response.tokens && response.user) {
+          console.log('[Civic Login] Authentication successful, setting user data...');
           setPublicKey(publicKey?.toString() || null);
           login(response.user, response.tokens);
           setAuthCompleted(true);
           setStatus('success');
           // Redirect after successful authentication
           const redirectPath = searchParams.get('redirect') || '/';
+          console.log('[Civic Login] Redirecting to:', redirectPath);
           setTimeout(() => router.push(redirectPath), 500);
         } else {
+          console.error('[Civic Login] Invalid response format:', response);
           setStatus('error');
           setError('Unexpected response from authentication server.');
         }
       } catch (err) {
+        console.error('[Civic Login] Authentication error:', err);
         setStatus('error');
         if (err instanceof ApiError) {
           setError(`Authentication failed: ${err.message}`);

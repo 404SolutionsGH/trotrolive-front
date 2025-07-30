@@ -6,6 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/auth-store';
+import { ContributeApi, type ContributeStationData, type ContributeFareData } from '@/lib/api/contribute';
 
 // Form schema for different contribution types
 const contributionSchema = z.object({
@@ -57,51 +58,61 @@ export default function ContributePage() {
     setError(null);
 
     try {
-      let endpoint = '';
-      let formattedData = {};
-
       switch (data.contributionType) {
         case 'station':
-          endpoint = '/api/stations/contribute';
-          formattedData = {
+          if (!data.stationName || !data.stationAddress) {
+            throw new Error('Please fill in all required station fields');
+          }
+          const stationData: ContributeStationData = {
             name: data.stationName,
             station_address: data.stationAddress,
-            station_latitude: data.stationLatitude,
-            station_longitude: data.stationLongitude,
+            station_latitude: data.stationLatitude || '0',
+            station_longitude: data.stationLongitude || '0',
           };
+          try {
+            await ContributeApi.contributeStation(stationData);
+          } catch (apiError) {
+            setError('Failed to contribute station. Please try again later.');
+            return;
+          }
           break;
-
         case 'fare':
-          endpoint = '/api/stations/fares/contribute';
-          formattedData = {
+          if (!data.startStation || !data.endStation || !data.fareAmount || !data.transportType) {
+            throw new Error('Please fill in all required fare fields');
+          }
+          const fareData: ContributeFareData = {
             start_station: data.startStation,
             end_station: data.endStation,
             transport_type: data.transportType,
             fare_amount: data.fareAmount,
           };
+          try {
+            await ContributeApi.contributeFare(fareData);
+          } catch (apiError) {
+            setError('Failed to contribute fare. Please try again later.');
+            return;
+          }
           break;
-
         case 'trip':
-          endpoint = '/api/stations/trips';
-          formattedData = {
+          if (!data.startStation || !data.endStation || !data.transportType) {
+            throw new Error('Please fill in all required trip fields');
+          }
+          const tripData: ContributeFareData = {
             start_station: data.startStation,
-            destination: data.endStation,
+            end_station: data.endStation,
             transport_type: data.transportType,
-            departure_time: data.departureTime,
+            fare_amount: '0', // Default fare for trip contribution
           };
+          try {
+            await ContributeApi.contributeFare(tripData);
+          } catch (apiError) {
+            setError('Failed to contribute trip. Please try again later.');
+            return;
+          }
           break;
-      }
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formattedData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to submit data');
+        default:
+          setError('Invalid contribution type.');
+          return;
       }
 
       reset();
@@ -246,6 +257,7 @@ export default function ContributePage() {
                   {...register('transportType')}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
                 >
+                  <option value="">Select transport type</option>
                   <option value="trotro">Trotro</option>
                   <option value="taxi">Taxi</option>
                   <option value="bus">Bus</option>
@@ -314,6 +326,7 @@ export default function ContributePage() {
                   {...register('transportType')}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary"
                 >
+                  <option value="">Select transport type</option>
                   <option value="trotro">Trotro</option>
                   <option value="taxi">Taxi</option>
                   <option value="bus">Bus</option>

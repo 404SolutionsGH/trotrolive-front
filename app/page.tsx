@@ -8,8 +8,11 @@ import { Book, CreditCard, Flag, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { stations, generateAllPossibleTrips } from "@/data/dummy-data";
+import { stations as mockStations, generateAllPossibleTrips } from "@/data/dummy-data";
 import Link from "next/link";
+import { toast } from "react-toastify";
+import { Station, StationsApi } from "./lib/api/stations";
+import { TripSearchRequest, TripsApi } from "./lib/api/trips";
 
 interface FeatureItemProps {
   icon: React.ReactNode;
@@ -53,9 +56,47 @@ export default function Home() {
   const [startStation, setStartStation] = useState("");
   const [destinationStation, setDestinationStation] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [availableDestinations, setAvailableDestinations] = useState<typeof stations>([]);
+  const [availableDestinations, setAvailableDestinations] = useState<Station[]>([]);
+  const [stations, setStations] = useState<Station[]>([]);
+  const [stationsNext, setStationsNext] = useState<string | null>(null); // For pagination
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const router = useRouter();
   
+  // Load stations from API with fallback to mock data, support pagination
+  useEffect(() => {
+    const loadStations = async () => {
+      try {
+        setLoading(true);
+        const apiStationsResp = await StationsApi.getStationsWithPagination();
+        setStations(apiStationsResp.results);
+        setStationsNext(apiStationsResp.next || null);
+      } catch (error) {
+        console.warn('Using mock stations due to API error:', error);
+        setStations(mockStations);
+        setStationsNext(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadStations();
+  }, []);
+
+  // Handler to load more stations (pagination)
+  const handleLoadMoreStations = async () => {
+    if (!stationsNext) return;
+    try {
+      setLoadingMore(true);
+      const resp = await StationsApi.getStationsWithPagination(stationsNext);
+      setStations((prev) => [...prev, ...resp.results]);
+      setStationsNext(resp.next || null);
+    } catch (error) {
+      toast.error('Failed to load more stations.');
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
   // Update available destinations when start station changes
   useEffect(() => {
     if (startStation) {
@@ -71,29 +112,64 @@ export default function Home() {
     } else {
       setAvailableDestinations([]);
     }
-  }, [startStation, destinationStation]);
+  }, [startStation, destinationStation, stations]);
 
-  const handleCheckFare = () => {
+  const handleCheckFare = async () => {
     if (!startStation || !destinationStation) {
       setErrorMessage("Please select both start and destination stations.");
       return;
     }
 
-    // We'll use the new generateAllPossibleTrips function to get all possible trips
-    const trips = generateAllPossibleTrips();
-    
-    const matchingTrip = trips.find(
-      (trip) =>
-        trip.start_station.id.toString() === startStation &&
-        trip.destination.id.toString() === destinationStation
-    );
+    try {
+      // Try to search trips using API first
+      const searchParams: TripSearchRequest = {
+        start_station: parseInt(startStation),
+        destination: parseInt(destinationStation),
+      };
 
-    if (matchingTrip) {
-      router.push(
-        `/trips?start=${startStation}&destination=${destinationStation}`
+      // Support for paginated results in the future
+      const apiTrips = await TripsApi.searchTrips(searchParams);
+      // If paginated, handle apiTrips.results and apiTrips.next
+      // For now, apiTrips is an array
+      if (Array.isArray(apiTrips) && apiTrips.length > 0) {
+        router.push(
+          `/trips?start=${startStation}&destination=${destinationStation}`
+        );
+        return;
+      }
+
+      // If API returns no results, fall back to mock data
+      const mockTrips = generateAllPossibleTrips();
+      const matchingTrip = mockTrips.find(
+        (trip) =>
+          trip.start_station.id.toString() === startStation &&
+          trip.destination.id.toString() === destinationStation
       );
-    } else {
-      setErrorMessage("No trips found for the selected stations.");
+
+      if (matchingTrip) {
+        router.push(
+          `/trips?start=${startStation}&destination=${destinationStation}`
+        );
+      } else {
+        setErrorMessage("No trips found for the selected stations.");
+      }
+    } catch (error) {
+      console.warn('Using mock trips due to API error:', error);
+      // Fallback to mock data
+      const trips = generateAllPossibleTrips();
+      const matchingTrip = trips.find(
+        (trip) =>
+          trip.start_station.id.toString() === startStation &&
+          trip.destination.id.toString() === destinationStation
+      );
+
+      if (matchingTrip) {
+        router.push(
+          `/trips?start=${startStation}&destination=${destinationStation}`
+        );
+      } else {
+        setErrorMessage("No trips found for the selected stations.");
+      }
     }
   };
 
@@ -132,14 +208,26 @@ export default function Home() {
                   className="flex-1 border border-gray-300 rounded-lg p-2"
                   value={startStation}
                   onChange={(e) => setStartStation(e.target.value)}
+                  disabled={loading}
                 >
-                  <option value="">Select your start station</option>
+                  <option value="">{loading ? "Loading stations..." : "Select your start station"}</option>
                   {stations.map((station) => (
                     <option key={station.id} value={station.id}>
                       {station.name}
                     </option>
                   ))}
                 </select>
+                {/* Pagination: Load more stations button if available */}
+                {stationsNext && (
+                  <Button
+                    type="button"
+                    className="mt-2 bg-pink-100 text-pink-800 hover:bg-pink-200"
+                    onClick={handleLoadMoreStations}
+                    disabled={loadingMore}
+                  >
+                    {loadingMore ? "Loading more..." : "Load More Stations"}
+                  </Button>
+                )}
               </div>
               <div className="flex flex-col space-y-1 md:space-y-2">
                 <label htmlFor="destination-station" className="text-sm font-medium">
@@ -150,7 +238,7 @@ export default function Home() {
                   className="flex-1 border border-gray-300 rounded-lg p-2"
                   value={destinationStation}
                   onChange={(e) => setDestinationStation(e.target.value)}
-                  disabled={!startStation}
+                  disabled={!startStation || loading}
                 >
                   <option value="">Select your destination station</option>
                   {availableDestinations.map((station) => (
@@ -163,8 +251,9 @@ export default function Home() {
               <Button
                 className="w-full bg-pink-500 hover:bg-pink-600"
                 onClick={handleCheckFare}
+                disabled={loading}
               >
-                Check Fare Now
+                {loading ? "Loading..." : "Check Fare Now"}
               </Button>
             </div>
           </div>
