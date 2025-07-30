@@ -38,7 +38,7 @@ export const authApi = {
       });
       
       // Create the actual request promise
-      const requestPromise = axios.post(`${process.env.NEXT_PUBLIC_API_URL}/accounts/api/civic-auth/`, payload, {
+      const requestPromise = axios.post(`accounts/api/civic-auth/`, payload, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',
