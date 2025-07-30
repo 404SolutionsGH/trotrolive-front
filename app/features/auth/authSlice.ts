@@ -113,10 +113,10 @@ export const registerUser = createAsyncThunk(
 
       const response = await authApi.register(userData, csrfToken);
 
-      if (response.tokens?.access) {
+      if (response.access_token) {
         setAuthTokens({
-          access: response.tokens.access,
-          refresh: response.tokens.refresh
+          access: response.access_token,
+          refresh: response.refresh_token
         });
       }
 
@@ -137,21 +137,15 @@ export const loginUser = createAsyncThunk(
       const response = await authApi.login(credentials);
       console.log("Login response: ", response);
 
-      if (!response?.tokens.access) {
+      if (!response?.access_token) {
         throw new Error('Invalid response format from server');
       }
 
       // Store tokens in cookies
       setAuthTokens({
-        access: response.tokens.access,
-        refresh: response.tokens.refresh
+        access: response.access_token,
+        refresh: response.refresh_token
       });
-
-      // Store non-sensitive user data in localStorage if needed
-      if (typeof window !== 'undefined' && credentials.rememberMe) {
-        localStorage.setItem('rememberMe', 'true');
-        localStorage.setItem('email', credentials.email);
-      }
 
       return response.user;
     } catch (error) {

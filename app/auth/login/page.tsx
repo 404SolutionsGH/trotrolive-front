@@ -33,7 +33,7 @@ export default function Login() {
     disconnect,
   } = useWallet();
 
-  const { user, idToken, status: civicStatus } = useUser();
+  const { user, idToken, authStatus: civicStatus } = useUser();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -94,9 +94,11 @@ export default function Login() {
         
         // Store auth data
         login({
-          user: response.user,
-          access_token: response.access_token,
-          refresh_token: response.refresh_token
+          ...response.user,
+          id: response.user.id.toString()
+        }, {
+          access: response.access_token,
+          refresh: response.refresh_token
         });
         
         // Check user role and redirect accordingly
@@ -159,7 +161,7 @@ export default function Login() {
                   ) : status === 'waiting-civic' ? (
                     <div className="text-center">
                       <p className="text-gray-600">Please complete your Civic Auth verification</p>
-                      {civicStatus === 'loading' && (
+                      {civicStatus === 'authenticating' && (
                         <div className="mt-4">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
                         </div>
