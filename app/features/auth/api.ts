@@ -27,10 +27,10 @@ export const authApi = {
       }
       
       const payload = {
-        civic_token: civicToken,
+        civic_jwt: civicToken,
         display_mode: displayMode // Send display mode to backend for context
       };
-      console.log('[CivicAuth] Sending payload:', { ...payload, civic_token: '***REDACTED***' });
+      console.log('[CivicAuth] Sending payload:', { ...payload, civic_jwt: '***REDACTED***' });
       
       // Create a timeout promise
       const timeoutPromise = new Promise((_, reject) => {
@@ -38,7 +38,7 @@ export const authApi = {
       });
       
       // Create the actual request promise
-      const requestPromise = axios.post(`accounts/api/civic-auth/`, payload, {
+      const requestPromise = axiosInstance.post('accounts/api/civic-auth/', payload, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',
@@ -56,12 +56,12 @@ export const authApi = {
       
       console.log('[CivicAuth] Backend response received:', {
         status: response.status,
-        hasTokens: !!response.data.tokens,
+        hasTokens: !!response.data.access_token,
         hasUser: !!response.data.user,
         displayMode: response.data.display_mode
       });
       
-      if (response.data.tokens && response.data.user) {
+      if (response.data.access_token && response.data.user) {
         // Store tokens immediately with special handling for iframe mode
         if (isIframeMode) {
           // For iframe mode, use a special flag to indicate iframe authentication
@@ -70,20 +70,20 @@ export const authApi = {
         }
         
         // Always store tokens in both localStorage and cookies for redundancy
-        localStorage.setItem('access_token', response.data.tokens.access);
-        localStorage.setItem('refresh_token', response.data.tokens.refresh);
-        localStorage.setItem('civic_jwt', response.data.tokens.access);
+        localStorage.setItem('access_token', response.data.access_token);
+        localStorage.setItem('refresh_token', response.data.refresh_token);
+        localStorage.setItem('civic_jwt', response.data.access_token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
         
         // Set cookies with SameSite attributes appropriate for iframe use
-        Cookies.set('access_token', response.data.tokens.access, {
+        Cookies.set('access_token', response.data.access_token, {
           path: '/',
           sameSite: isIframeMode ? 'none' : 'lax',
           secure: true,
           expires: 1 // 1 day
         });
         
-        Cookies.set('refresh_token', response.data.tokens.refresh, {
+        Cookies.set('refresh_token', response.data.refresh_token, {
           path: '/',
           sameSite: isIframeMode ? 'none' : 'lax',
           secure: true,
@@ -92,12 +92,12 @@ export const authApi = {
         
         // Force all axios instances to use the new token
         if (axios.defaults.headers) {
-          axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.tokens.access}`;
+          axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token}`;
         }
         
         // Also set the token on our configured axiosInstance
         if (axiosInstance.defaults.headers) {
-          axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${response.data.tokens.access}`;
+          axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token}`;
         }
         
         console.log('[CivicAuth] Authentication successful, tokens stored');

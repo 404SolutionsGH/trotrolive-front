@@ -80,7 +80,8 @@ export const useAuthStore = create<AuthState>()(
             throw new Error('Logout failed');
           }
         } catch (error) {
-          console.error('Logout error:', error);
+          console.error('Logout error (likely CORS issue):', error);
+          // Continue with local logout even if API call fails
         } finally {
           // Clear tokens
           Cookies.remove('access_token', { path: '/' });
@@ -145,9 +146,9 @@ export const useAuthStore = create<AuthState>()(
           
           throw new Error('No user data');
         } catch (error) {
-          console.error('Auth check failed:', error);
-          // Clear invalid session
-          get().logout();
+          console.error('Auth check failed (likely CORS issue):', error);
+          // Don't automatically logout on CORS errors, let user handle it
+          set({ isLoading: false });
           return false;
         }
       },

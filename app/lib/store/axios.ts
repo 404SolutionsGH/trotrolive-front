@@ -2,7 +2,7 @@ import Cookies from 'js-cookie';
 import axios from 'axios';
 import { tokenManager } from './manager'; // Import the token manager
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL || 'https://api.trotro.live/';
+const baseURL = process.env.NEXT_PUBLIC_API_URL || 'https://api.trotro.live';
 
 export const axiosInstance = axios.create({
   baseURL,
@@ -21,57 +21,23 @@ export const axiosInstance = axios.create({
 // Request Interceptor
 axiosInstance.interceptors.request.use(
   async (config) => {
-    console.log('Axios Request:', config.method?.toUpperCase(), config.url);
-    const authSkipEndpoints = ['/civic-login/', '/auth/login/', '/register/', '/token/refresh/', '/accounts/api/civic-auth/'];
-    const shouldSkipAuth = authSkipEndpoints.some(endpoint => config.url?.includes(endpoint));
-    
-    // Check if we're in iframe authentication mode
-    const isIframeAuth = typeof window !== 'undefined' && localStorage.getItem('iframe_auth') === 'true';
-    
-    // For Civic auth endpoint, explicitly remove any Authorization header to prevent conflicts
-    if (config.url?.includes('/accounts/api/civic-auth/')) {
-      delete config.headers.Authorization;
-      console.log('[Axios Interceptor] Authorization header removed for Civic auth endpoint');
+    // Only add auth headers for authenticated requests (not for login/register)
+    if (config.url && !config.url.includes('/auth/') && !config.url.includes('/csrf/')) {
+      let token = tokenManager.getAccessToken();
       
-      // If we have display mode info in the URL, add it as a header
-      const urlParams = new URLSearchParams(window.location.search);
-      const stateParam = urlParams.get('state');
-      if (stateParam) {
-        try {
-          const decodedState = JSON.parse(atob(stateParam));
-          const displayMode = decodedState.displayMode;
-          if (displayMode) {
-            config.headers['X-Display-Mode'] = displayMode;
-            console.log(`[Axios Interceptor] Added display mode header: ${displayMode}`);
-          }
-        } catch (e) {
-          console.error('[Axios Interceptor] Failed to parse state parameter:', e);
-        }
+      // Check if we're in iframe mode
+      const isIframeAuth = localStorage.getItem('iframe_auth') === 'true';
+      
+      if (isIframeAuth) {
+        console.log('[Axios Interceptor] Using iframe authentication mode for', config.url);
       }
-    }
-    // Special handling for protected endpoints in any mode
-    else if (!shouldSkipAuth) {
-      // Comprehensive token gathering from all possible storage locations
-      let token = null;
       
-      // Check every possible token location in order of preference
-      if (typeof window !== 'undefined') {
-        // Try cookie first (server-set tokens)
-        token = Cookies.get('access_token');
-        
-        // If no token in cookie, try localStorage (multiple options)
-        if (!token) {
-          token = localStorage.getItem('access_token') ||
-                 localStorage.getItem('civic_jwt');
-        }
-        
-        console.log('[Axios Interceptor] Found token:', token ? 'Yes' : 'No');
-        
-        // For iframe mode, add special header
-        if (isIframeAuth) {
-          config.headers['X-Display-Mode'] = 'iframe';
-          console.log('[Axios Interceptor] Using iframe authentication mode for', config.url);
-        }
+      console.log('[Axios Interceptor] Found token:', token ? 'Yes' : 'No');
+      
+      // For iframe mode, add special header
+      if (isIframeAuth) {
+        config.headers['X-Display-Mode'] = 'iframe';
+        console.log('[Axios Interceptor] Using iframe authentication mode for', config.url);
       }
 
       // Handle token expiration if needed
@@ -94,7 +60,7 @@ axiosInstance.interceptors.request.use(
       }
     }
 
-    
+    // Add CSRF token if available
     const csrfToken = Cookies.get('csrftoken');
     if (csrfToken) {
       config.headers['X-CSRFToken'] = csrfToken;
@@ -108,7 +74,7 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Response Interceptor with improved error handling
+// Response Interceptor
 axiosInstance.interceptors.response.use(
   (response) => {
     // Log successful responses for debugging
@@ -124,6 +90,7 @@ axiosInstance.interceptors.response.use(
       console.log('[Axios Response] 401 error, attempting token refresh');
 
       try {
+        console.log('[Axios Response Interceptor] 401 error, attempting token refresh...');
         const newToken = await tokenManager.refreshToken();
         if (newToken) {
           originalRequest.headers.Authorization = `Bearer ${newToken}`;

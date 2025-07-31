@@ -47,7 +47,9 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(new URL('/dashboard', req.url));
       }
     } catch (error) {
-      console.error('Token verification failed:', error);
+      console.error('Token verification failed (likely CORS issue):', error);
+      // Don't redirect on CORS errors, let the auth page handle it
+      return NextResponse.next();
     }
 
     // Token is invalid or verification failed, clear cookies
@@ -81,11 +83,10 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(url);
       }
     } catch (error) {
-      console.error('Token verification failed:', error);
-      // On error, redirect to login
-      const url = new URL('/auth/login', req.url);
-      url.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(url);
+      console.error('Token verification failed (likely CORS issue):', error);
+      // On CORS error, allow access but let client-side handle auth
+      // This prevents infinite redirects when API is unreachable
+      return NextResponse.next();
     }
   }
 

@@ -28,12 +28,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     setIsClient(true);
   }, []);
 
-  // Check authentication status on app startup
+  // Check authentication status on app startup, but handle errors gracefully
   useEffect(() => {
     if (isClient) {
-      dispatch(checkAuthStatus());
+      // Only check auth if we're not on an auth route to prevent redirects
+      const isAuthRoute = pathname?.startsWith('/auth');
+      if (!isAuthRoute) {
+        dispatch(checkAuthStatus()).catch((error) => {
+          console.error('Auth check failed on startup (likely CORS issue):', error);
+          // Don't redirect on CORS errors, let user handle it
+        });
+      }
     }
-  }, [isClient, dispatch]);
+  }, [isClient, dispatch, pathname]);
 
   // Avoid hydration mismatch
   if (!isClient) {

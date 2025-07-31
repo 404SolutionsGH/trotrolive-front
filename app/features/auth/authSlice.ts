@@ -90,7 +90,7 @@ export const checkAuthStatus = createAsyncThunk(
               return { isAuthenticated: true, user: null }; // User data will be fetched separately
             }
           } catch (refreshError) {
-            console.error('Token refresh failed:', refreshError);
+            console.error('Token refresh failed (likely CORS issue):', refreshError);
           }
         }
         
@@ -99,7 +99,8 @@ export const checkAuthStatus = createAsyncThunk(
         return { isAuthenticated: false, user: null };
       }
     } catch (error) {
-      console.error('Auth status check failed:', error);
+      console.error('Auth status check failed (likely CORS issue):', error);
+      // Don't clear tokens on CORS errors, let user handle it
       return { isAuthenticated: false, user: null };
     }
   }

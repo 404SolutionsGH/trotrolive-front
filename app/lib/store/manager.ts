@@ -2,7 +2,7 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-const baseURL = process.env.NEXT_PUBLIC_API_URL || 'https://api.trotro.live/';
+const baseURL = process.env.NEXT_PUBLIC_API_URL || 'https://api.trotro.live';
 
 // Token refresh utility
 class TokenManager {
@@ -19,25 +19,44 @@ class TokenManager {
     this.isRefreshing = true;
 
     try {
-      const refreshToken = localStorage.getItem('refresh_token') || Cookies.get('refresh_token');
+      // Try to get refresh token from cookies first, then localStorage
+      const refreshToken = Cookies.get('refresh_token') || localStorage.getItem('refresh_token');
       if (!refreshToken) {
         throw new Error('No refresh token available');
       }
 
       console.log('Refreshing token...');
+      console.log('Base URL:', baseURL);
+      console.log('Refresh token exists:', !!refreshToken);
       
       const response = await axios.post(
         `${baseURL}/accounts/api/token/refresh/`,
         { refresh: refreshToken },
         {
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
           withCredentials: true,
         }
       );
 
+      console.log('Token refresh response:', response.data);
+
+      if (!response.data.access) {
+        throw new Error('No access token in response');
+      }
+
       const newAccessToken = response.data.access;
-      localStorage.setItem('civic_jwt', newAccessToken);
-      Cookies.set('access_token', newAccessToken, { path: '/' });
+      
+      // Store token consistently in both places
+      localStorage.setItem('access_token', newAccessToken);
+      localStorage.setItem('civic_jwt', newAccessToken); // Keep for backward compatibility
+      Cookies.set('access_token', newAccessToken, { 
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax'
+      });
 
       // Process queued requests
       this.processQueue(null, newAccessToken);
@@ -47,6 +66,25 @@ class TokenManager {
 
     } catch (error) {
       console.error('Token refresh failed:', error);
+      
+      // Log more details about the error
+      if (axios.isAxiosError(error)) {
+        console.error('Axios error details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          url: error.config?.url,
+          method: error.config?.method
+        });
+      }
+      
+      this.clearAuthData();
+      this.processQueue(error, null);
+      
+      // Redirect to main page instead of login (matching your app flow)
+      if (typeof window !== 'undefined' && !window.location.pathname.includes('/auth/')) {
+        window.location.href = '/';
+      }
 
       // Only clear auth if error is 401 or 403
       const status = (error as { response?: { status: number } })?.response?.status;
