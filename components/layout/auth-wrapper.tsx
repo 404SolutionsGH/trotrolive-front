@@ -18,11 +18,22 @@ export function AuthWrapper({ children }: AuthWrapperProps) {
 
   useEffect(() => {
     const initAuth = async () => {
-      const isValid = await checkAuth();
-      
-      // Handle unauthenticated access to protected routes
-      if (!isValid && pathname?.startsWith('/dashboard')) {
-        router.replace('/auth/login');
+      // Skip auth check on auth routes to prevent redirects
+      const isAuthRoute = pathname?.startsWith('/auth');
+      if (isAuthRoute) {
+        return;
+      }
+
+      try {
+        const isValid = await checkAuth();
+        
+        // Handle unauthenticated access to protected routes
+        if (!isValid && pathname?.startsWith('/dashboard')) {
+          router.replace('/auth/login');
+        }
+      } catch (error) {
+        console.error('Auth check failed in wrapper (likely CORS issue):', error);
+        // Don't redirect on CORS errors, let user handle it
       }
     };
 
@@ -44,7 +55,7 @@ export function AuthWrapper({ children }: AuthWrapperProps) {
             }
           });
         } catch (error) {
-          console.error('Failed to fetch notifications:', error);
+          console.error('Failed to fetch notifications (likely CORS issue):', error);
         }
       };
 

@@ -28,8 +28,15 @@ export class FaresApi {
         throw new Error('Failed to fetch fares');
       }
 
-      const data: FareResponse = await response.json();
-      return data.results || data;
+      const data = await response.json();
+      // Ensure we always return a Fare[] array
+      if (Array.isArray(data)) {
+        return data;
+      } else if (data && Array.isArray(data.results)) {
+        return data.results;
+      } else {
+        return [];
+      }
     } catch (error) {
       console.warn('Using mock fares data due to API error:', error);
       // Return empty array for fares since we don't have mock fare data

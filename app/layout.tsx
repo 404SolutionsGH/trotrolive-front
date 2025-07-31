@@ -1,6 +1,12 @@
+import type { Metadata } from 'next';
 import { Providers } from './providers';
-import { AuthWrapper } from '@/components/layout/auth-wrapper';
 import './globals.css';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
+
+export const metadata: Metadata = {
+  title: 'TrotroLive - Your Smart Transportation Companion',
+  description: 'Find the best routes, track your journey, and contribute to the community.',
+};
 
 export default function RootLayout({
   children,
@@ -9,18 +15,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <Providers>
-          <AuthWrapper>
+      <body className="antialiased">
+        <NuqsAdapter>
+          <Providers>
             {children}
-          </AuthWrapper>
-        </Providers>
+          </Providers>
+        </NuqsAdapter>
       </body>
     </html>
   );
 }
-
-export const metadata = {
-  title: 'TrotroLive',
-  description: 'Your trusted transport companion',
-};

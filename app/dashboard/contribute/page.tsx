@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/auth-store';
-import { ContributeApi, type ContributeStationData, type ContributeFareData } from '@/lib/api/contribute';
+import { ContributeApi, type ContributeStationData, type ContributeFareData } from '@/app/lib/api/contribute';
 
 // Form schema for different contribution types
 const contributionSchema = z.object({
@@ -40,13 +40,11 @@ export default function ContributePage() {
     register,
     handleSubmit,
     formState: { errors },
-    reset,
-    watch
+    reset
   } = useForm<ContributionForm>({
     resolver: zodResolver(contributionSchema)
   });
 
-  const currentType = watch('contributionType');
 
   const onSubmit = async (data: ContributionForm) => {
     if (!isAuthenticated) {

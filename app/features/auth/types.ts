@@ -1,13 +1,14 @@
 export interface User {
-    phoneNumber?: string;
-    name?: string;
-    email?: string;
+    id: number;
+    full_name: string;
+    email: string;
+    phone: string;
+    role: string;
 }
 
 export interface LoginCredentials {
-    email: string;
-    password: string;
-    rememberMe?: boolean; // Add this property
+    wallet_address: string;
+    id_token: string;
 }
 
 export interface RegisterData {
@@ -26,15 +27,10 @@ export interface RegisterData {
 // }
 
 export interface AuthResponse {
-    user: {
-      full_name: string;
-      email: string;
-    };
-    tokens: {
-      access: string;
-      refresh: string;
-    };
-  }
+    access_token: string;
+    refresh_token: string;
+    user: User;
+}
 
 export interface AuthState {
     user: User | null;

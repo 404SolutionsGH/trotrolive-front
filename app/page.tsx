@@ -1,9 +1,9 @@
-'use client'
-
+"use client";
 import { SiteHeader } from "@/components/site-header";
-import Support from "@/components/support";
 import Footer from "@/components/footer";
 import Image from "next/image";
+import HomePageBody from "@/components/HomePageBody";
+import Support from "@/components/support";
 import { Book, CreditCard, Flag, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
@@ -345,6 +345,7 @@ export default function Home() {
       </main>
 
       {/* Footer */}
+      <HomePageBody />
       <Footer />
     </div>
   );

@@ -3,6 +3,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from "react";
+import { isClient } from "@/lib/utils";
+import Cookies from 'js-cookie';
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ConnectionProvider,
@@ -14,21 +16,20 @@ import { CivicAuthProvider, useUser } from "@civic/auth-web3/react";
 import "@solana/wallet-adapter-react-ui/styles.css";
 import { authApi, ApiError } from "@/app/features/auth/api";
 import { useAuthStore } from "@/lib/auth-store";
+import { User, AuthResponse } from "@/app/features/auth/types";
 
-const WalletPage = () => {
-  const [isClient, setIsClient] = useState(false);
-  const clientId = process.env.NEXT_PUBLIC_CIVIC_CLIENT_ID;
+interface LoginCredentials {
+  wallet_address: string;
+  id_token: string;
+}
 
-  useEffect(() => {
-    setIsClient(true); 
-  }, []);
-
+export default function Login() {
   if (!isClient) {
     return null;
   }
 
   // Check if Civic client ID is configured
-  if (!clientId) {
+  if (!process.env.NEXT_PUBLIC_CIVIC_CLIENT_ID) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[url(https://i.imgur.com/h6v4f1k.jpg)]">
         <div className="bg-white p-8 rounded-lg shadow-lg">
@@ -51,11 +52,8 @@ const WalletPage = () => {
       <ConnectionProvider endpoint={endpoint}>
         <WalletProvider wallets={[]} autoConnect>
           <WalletModalProvider>
-            <CivicAuthProvider clientId={`${clientId}`}>
-              <div className="min-h-screen flex brightness-50 flex-col items-center justify-center bg-[url(https://i.imgur.com/h6v4f1k.jpg)]">
-                <h1 className="text-2xl font-bold mb-4">Connect your wallet</h1>
-                <p className="text-gray-600 mb-6">Connect your Solana wallet to continue</p>
-                <WalletMultiButton />
+            <CivicAuthProvider clientId={`${process.env.NEXT_PUBLIC_CIVIC_CLIENT_ID}`}>
+              <div className="min-h-screen backdrop-brightness-75 flex flex-col items-center justify-center bg-[url(https://i.imgur.com/h6v4f1k.jpg)]">
                 <ConnectionRedirect />
               </div>
             </CivicAuthProvider>
@@ -64,161 +62,172 @@ const WalletPage = () => {
       </ConnectionProvider>
     </main>
   );
-};
+}
 
 const ConnectionRedirect = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { publicKey } = useWallet();
-  const { user, idToken } = useUser();
+  const { user, idToken, authStatus: civicStatus } = useUser();
 
-  const setPublicKey = useAuthStore((state: any) => state.setPublicKey);
-  const login = useAuthStore((state: any) => state.login);
+  const {
+    isAuthenticated,
+    login,
+    logout,
+    setPublicKey,
+  } = useAuthStore();
 
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const [authCompleted, setAuthCompleted] = useState(false);
+  const [status, setStatus] = useState<'waiting-wallet' | 'waiting-civic' | 'authenticating' | 'error' | 'success'>('waiting-wallet');
   const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState<'waiting-wallet' | 'waiting-civic' | 'authenticating' | 'success' | 'error'>('waiting-wallet');
   const [timeoutReached, setTimeoutReached] = useState(false);
-  const authAttempted = useRef(false);
-  const retryCount = useRef(0);
+  const [authCompleted, setAuthCompleted] = useState(false);
 
-  // Timeout to prevent infinite spinner
   useEffect(() => {
+    // Check if user is already authenticated
+    if (isAuthenticated) {
+      console.log('[Login] User already authenticated, redirecting to dashboard');
+      router.push('/dashboard');
+      return;
+    }
+
     let timeout: NodeJS.Timeout;
-    if (isAuthenticating) {
+    if (status === 'authenticating') {
       timeout = setTimeout(() => {
+        console.log('[Login] Authentication timeout reached');
         setTimeoutReached(true);
         setStatus('error');
-        setError('Authentication timed out. Please try again.');
-        setIsAuthenticating(false);
-        authAttempted.current = false;
-      }, 15000); // 15s timeout
+      }, 30000); // 30 seconds timeout
     }
+
     return () => clearTimeout(timeout);
-  }, [isAuthenticating]);
+  }, [isAuthenticated, router, status]);
 
+  // Handle wallet connection
   useEffect(() => {
-    if (!publicKey) {
-      setStatus('waiting-wallet');
-      return;
-    }
-    if (!idToken) {
+    if (publicKey && !user) {
+      console.log('[Login] Wallet connected');
       setStatus('waiting-civic');
-      return;
+      setPublicKey(publicKey.toString());
     }
-    if (isAuthenticating || authCompleted || authAttempted.current) {
-      return;
-    }
-    setStatus('authenticating');
-    setIsAuthenticating(true);
-    setError(null);
-    authAttempted.current = true;
-    setTimeoutReached(false);
+  }, [publicKey, user, setPublicKey]);
 
-    (async () => {
-      try {
-        console.log('[Civic Login] Wallet connected:', publicKey?.toString());
-        console.log('[Civic Login] Civic JWT:', idToken);
-        console.log('[Civic Login] Client ID:', process.env.NEXT_PUBLIC_CIVIC_CLIENT_ID);
-        console.log('[Civic Login] API URL:', process.env.NEXT_PUBLIC_API_URL);
-        
-        const response = await authApi.civicAuth(idToken);
-        console.log('[Civic Login] Civic Auth API response:', response);
-        
-        if (response.tokens && response.user) {
-          console.log('[Civic Login] Authentication successful, setting user data...');
-          setPublicKey(publicKey?.toString() || null);
-          login(response.user, response.tokens);
-          setAuthCompleted(true);
-          setStatus('success');
-          // Redirect after successful authentication
-          const redirectPath = searchParams.get('redirect') || '/';
-          console.log('[Civic Login] Redirecting to:', redirectPath);
-          setTimeout(() => router.push(redirectPath), 500);
-        } else {
-          console.error('[Civic Login] Invalid response format:', response);
+  // Handle Civic authentication
+  useEffect(() => {
+    if (user && idToken) {
+      setStatus('authenticating');
+      
+      (async () => {
+        try {
+          console.log('[Civic Login] Wallet connected:', publicKey?.toString());
+          console.log('[Civic Login] Civic JWT:', idToken);
+          console.log('[Civic Login] Client ID:', process.env.NEXT_PUBLIC_CIVIC_CLIENT_ID);
+          console.log('[Civic Login] API URL:', process.env.NEXT_PUBLIC_API_URL);
+          
+          const response = await authApi.civicAuth(idToken);
+          console.log('[Civic Login] Civic Auth API response:', response);
+          
+          if (response && response.user) {
+            console.log('[Civic Login] Authentication successful, setting user data...');
+            setPublicKey(publicKey?.toString() || null);
+            
+            // Convert User type to match auth store User interface
+            const authUser = {
+              id: String(response.user.id), // Convert number to string
+              full_name: response.user.full_name,
+              email: response.user.email,
+              web3_address: publicKey?.toString()
+            };
+            
+            login(authUser, {
+              access: response.access_token,
+              refresh: response.refresh_token
+            });
+            
+            setAuthCompleted(true);
+            setStatus('success');
+            // Redirect after successful authentication
+            const redirectPath = searchParams.get('redirect') || '/';
+            console.log('[Civic Login] Redirecting to:', redirectPath);
+            setTimeout(() => router.push(redirectPath), 500);
+          } else {
+            console.error('[Civic Login] Invalid response format:', response);
+            setStatus('error');
+          }
+        } catch (err: any) {
+          console.error('[Civic Login] Authentication error:', err);
           setStatus('error');
-          setError('Unexpected response from authentication server.');
-        }
-      } catch (err) {
-        console.error('[Civic Login] Authentication error:', err);
-        setStatus('error');
-        if (err instanceof ApiError) {
-          setError(`Authentication failed: ${err.message}`);
-        } else {
-          setError('An unexpected error occurred during authentication');
-        }
-        authAttempted.current = false;
-      } finally {
-        setIsAuthenticating(false);
-      }
-    })();
-  }, [publicKey, idToken, isAuthenticating, authCompleted, router, searchParams, setPublicKey, login]);
-
-  // UI rendering
-  if (status === 'error' && error) {
-    return (
-      <div className="mt-6 text-center">
-        <div className="text-red-500 mb-4">
-          <p>{error}</p>
-        </div>
-        <button
-          onClick={() => {
+          setError(err.message || 'Authentication failed');
+          setTimeout(() => {
             setError(null);
-            setStatus(publicKey ? (idToken ? 'authenticating' : 'waiting-civic') : 'waiting-wallet');
-            setAuthCompleted(false);
-            setIsAuthenticating(false);
-            setTimeoutReached(false);
-            authAttempted.current = false;
-            retryCount.current++;
-          }}
-          className="px-4 py-2 bg-[#D6246E] text-white rounded hover:bg-[#B71C5A]"
-        >
-          Try Again
-        </button>
-      </div>
-    );
-  }
+            setStatus('waiting-wallet');
+            logout();
+          }, 3000);
+        }
+      })();
+    }
+  }, [user, idToken, login, logout, router, publicKey, setPublicKey, searchParams]);
 
-  if (status === 'waiting-wallet') {
-    return (
-      <div className="mt-6 text-center">
-        <p className="text-lg text-gray-600 mt-4">Connect your wallet to continue.</p>
-      </div>
-    );
-  }
-  if (status === 'waiting-civic') {
-    return (
-      <div className="mt-6 text-center">
-        <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D6246E]"></div>
-          <p className="text-lg mt-4">Waiting for Civic authentication...</p>
+  // Clear auth state on component unmount
+  useEffect(() => {
+    return () => {
+      logout();
+    };
+  }, [logout]);
+
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-md">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Sign in to your account
+          </h2>
+        </div>
+        <div className="mt-8">
+          {status === 'waiting-wallet' ? (
+            <div className="text-center">
+              <p className="text-gray-600">Connect your wallet to continue</p>
+              <div className="mt-4">
+                <WalletMultiButton className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg" />
+              </div>
+            </div>
+          ) : status === 'waiting-civic' ? (
+            <div className="text-center">
+              <p className="text-gray-600">Please complete your Civic Auth verification</p>
+              {civicStatus === 'authenticating' && (
+                <div className="mt-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+                </div>
+              )}
+            </div>
+          ) : status === 'authenticating' ? (
+            <div className="text-center">
+              <p className="text-gray-600">Authenticating with backend...</p>
+              <div className="mt-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+              </div>
+            </div>
+          ) : status === 'success' ? (
+            <div className="text-center">
+              <p className="text-green-600">Authentication successful!</p>
+              <p className="text-gray-600">Redirecting to dashboard...</p>
+            </div>
+          ) : (
+            <div className="text-center">
+              <p className="text-red-600">{error || 'Authentication failed'}</p>
+              <button
+                onClick={() => {
+                  setStatus('waiting-wallet');
+                  setError(null);
+                  logout();
+                }}
+                className="mt-4 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                Try Again
+              </button>
+            </div>
+          )}
         </div>
       </div>
-    );
-  }
-  if (status === 'authenticating') {
-    return (
-      <div className="mt-6 text-center">
-        <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#D6246E]"></div>
-          <p className="text-lg mt-4">Authenticating with Civic...</p>
-        </div>
-      </div>
-    );
-  }
-  if (status === 'success') {
-    return (
-      <div className="mt-6 text-center">
-        <div className="text-green-600 mb-4">
-          <p>Authentication successful! Redirecting...</p>
-        </div>
-      </div>
-    );
-  }
-  // fallback
-  return null;
+    </div>
+  );
 };
-
-export default WalletPage;

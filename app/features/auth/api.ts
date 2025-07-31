@@ -11,40 +11,131 @@ export class ApiError extends Error {
 }
 
 export const authApi = {
-  civicAuth: async (civicToken: string): Promise<AuthResponse> => {
+  civicAuth: async (civicToken: string, displayMode: string = 'default'): Promise<AuthResponse> => {
     try {
-      const response = await axiosInstance.post('accounts/api/civic-auth/', {
+      // Check if we're in iframe mode
+      const isIframeMode = displayMode === 'iframe';
+      console.log(`[CivicAuth] Starting authentication in ${displayMode} mode`);
+      
+      // Clear any existing authentication state to prevent conflicts
+      if (typeof window !== 'undefined') {
+        Cookies.remove('access_token', { path: '/' });
+        Cookies.remove('refresh_token', { path: '/' });
+        localStorage.removeItem('civic_jwt');
+        localStorage.removeItem('user');
+        localStorage.removeItem('iframe_auth');
+      }
+      
+      const payload = {
         civic_jwt: civicToken,
-      }, {
+        display_mode: displayMode // Send display mode to backend for context
+      };
+      console.log('[CivicAuth] Sending payload:', { ...payload, civic_jwt: '***REDACTED***' });
+      
+      // Create a timeout promise
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timeout')), 30000); // 30 second timeout
+      });
+      
+      // Create the actual request promise
+      const requestPromise = axiosInstance.post('accounts/api/civic-auth/', payload, {
         withCredentials: true,
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
+          // Explicitly set Authorization to empty to prevent any existing token from being sent
+          'Authorization': '',
+          // Add a custom header for iframe mode to help the server configure cookie settings
+          'X-Display-Mode': displayMode
         },
+        timeout: 25000, // 25 second timeout for axios
       });
 
-      if (response.data.user) {
+      // Race between timeout and request
+      const response = await Promise.race([requestPromise, timeoutPromise]) as any;
+      
+      console.log('[CivicAuth] Backend response received:', {
+        status: response.status,
+        hasTokens: !!response.data.access_token,
+        hasUser: !!response.data.user,
+        displayMode: response.data.display_mode
+      });
+      
+      if (response.data.access_token && response.data.user) {
+        // Store tokens immediately with special handling for iframe mode
+        if (isIframeMode) {
+          // For iframe mode, use a special flag to indicate iframe authentication
+          localStorage.setItem('iframe_auth', 'true');
+          localStorage.setItem('iframe_auth_timestamp', Date.now().toString());
+        }
+        
+        // Always store tokens in both localStorage and cookies for redundancy
+        localStorage.setItem('access_token', response.data.access_token);
+        localStorage.setItem('refresh_token', response.data.refresh_token);
+        localStorage.setItem('civic_jwt', response.data.access_token);
         localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        // Set cookies with SameSite attributes appropriate for iframe use
+        Cookies.set('access_token', response.data.access_token, {
+          path: '/',
+          sameSite: isIframeMode ? 'none' : 'lax',
+          secure: true,
+          expires: 1 // 1 day
+        });
+        
+        Cookies.set('refresh_token', response.data.refresh_token, {
+          path: '/',
+          sameSite: isIframeMode ? 'none' : 'lax',
+          secure: true,
+          expires: 7 // 7 days
+        });
+        
+        // Force all axios instances to use the new token
+        if (axios.defaults.headers) {
+          axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token}`;
+        }
+        
+        // Also set the token on our configured axiosInstance
+        if (axiosInstance.defaults.headers) {
+          axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token}`;
+        }
+        
+        console.log('[CivicAuth] Authentication successful, tokens stored');
+      } else {
+        console.error('[CivicAuth] Invalid response format:', response.data);
+        throw new Error('Invalid response format from authentication server');
       }
 
       return response.data;
     } catch (error) {
+      console.error('[CivicAuth] Authentication failed:', error);
+      
       if (error instanceof AxiosError) {
-        console.error('Civic authentication failed:', error.response?.data || error.message);
+        console.error('[CivicAuth] Backend error details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message,
+          code: error.code
+        });
         
         const errorMessage = error.response?.data?.message ||
                            error.response?.data?.detail ||
                            error.response?.data?.error ||
+                           error.message ||
                            'Civic authentication failed';
 
         throw new ApiError(
           error.response?.status || 500,
           typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage)
         );
+      } else if (error instanceof Error && error.message === 'Request timeout') {
+        console.error('[CivicAuth] Request timed out');
+        throw new ApiError(408, 'Authentication request timed out. Please try again.');
       } else {
-        console.error('Civic authentication failed:', error);
+        console.error('[CivicAuth] Unexpected error:', error);
+        throw new ApiError(500, 'An unexpected error occurred during Civic authentication');
       }
-      throw new ApiError(500, 'An unexpected error occurred during Civic authentication');
     }
   },
 
@@ -175,32 +266,34 @@ export const refreshAccessToken = async (refreshToken: string): Promise<{ access
       throw new Error('No refresh token found');
     }
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/accounts/api/token/refresh/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh: refreshToken }),
-    });
+    console.log('Refreshing token using axiosInstance...');
+    const response = await axiosInstance.post('/accounts/api/token/refresh/',
+      { refresh: refreshToken },
+      {
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
 
-    if (!response.ok) {
-      throw new Error('Failed to refresh access token');
-    }
-
-    const data = await response.json();
+    const data = response.data;
     if (data.access) {
       localStorage.setItem('access_token', data.access); // Save the new access token
       return { access: data.access };
     }
-
-    throw new Error('Access token missing in refresh response');
+    return null;
   } catch (error) {
-    console.error('Error refreshing token:', error);
+    console.error('Token refresh failed:', error);
     return null;
   }
 };
 
 export async function getCsrfToken() {
-  const response = await axios.get('/accounts/api/get-csrf-token/'); // Request CSRF token from backend
-  const csrfToken = response.data.csrfToken;
-  console.log('CSRF Token from server:', csrfToken);
-  return csrfToken;
+  try {
+    const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/accounts/api/csrf/`, {
+      withCredentials: true,
+    });
+    return response.data.csrfToken;
+  } catch (error) {
+    console.error('Failed to get CSRF token:', error);
+    return null;
+  }
 }

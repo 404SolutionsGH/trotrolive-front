@@ -1,8 +1,7 @@
 'use client';
-
 import { useSearchParams } from "next/navigation";
 import { generateAllPossibleTrips } from "@/data/dummy-data";
-import { TripsApi, type TripSearchRequest } from "@/lib/api/trips";
+import { TripsApi, type TripSearchRequest } from "@/app/lib/api/trips";
 import Footer from "@/components/footer";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
@@ -38,26 +37,10 @@ export default function TripsPage() {
           destination: parseInt(destination),
         };
 
-        // Support for paginated results in the future
+        // Search trips using API
         const apiTrips = await TripsApi.searchTrips(searchParams);
-        // If paginated, handle apiTrips.results and apiTrips.next
-        if (Array.isArray(apiTrips)) {
-          setMatchedTrips(apiTrips);
-          setTripsNext(null); // No pagination yet
-        } else if (apiTrips && apiTrips.results) {
-          setMatchedTrips(apiTrips.results);
-          setTripsNext(apiTrips.next || null);
-        } else {
-          // If API returns no results, fall back to mock data
-          const allTrips = generateAllPossibleTrips();
-          const mockMatchedTrips = allTrips.filter(
-            (trip) =>
-              trip.start_station.id.toString() === startStation &&
-              trip.destination.id.toString() === destination
-          );
-          setMatchedTrips(mockMatchedTrips);
-          setTripsNext(null);
-        }
+        setMatchedTrips(apiTrips);
+        setTripsNext(null); // No pagination yet
       } catch (error) {
         console.warn('Using mock trips due to API error:', error);
         // Fallback to mock data
@@ -101,46 +84,61 @@ export default function TripsPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col min-h-screen">
-        <main className="flex-1 container mx-auto py-8 md:py-16 px-4 mb-24">
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500"></div>
           </div>
-        </main>
-        <Footer />
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col min-h-screen">
-        <main className="flex-1 container mx-auto py-8 md:py-16 px-4 mb-24">
-          <div className="text-center py-12 bg-gray-50 rounded-lg">
-            <p className="text-lg text-red-600 mb-4">{error}</p>
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
+            <p className="text-gray-600 mb-4">{error}</p>
             <Button asChild className="bg-pink-500 hover:bg-pink-600">
               <Link href="/">
-                Back to Home
+                Go Back Home
               </Link>
             </Button>
           </div>
-        </main>
-        <Footer />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <main className="flex-1 container mx-auto py-8 md:py-16 px-4 mb-24">
-        <div className="mb-6">
-          <Link href="/" className="inline-flex items-center text-pink-500 hover:text-pink-600">
-            <ArrowLeft size={20} className="mr-2" />
-            <span>Back to Home</span>
-          </Link>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm border-b">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/" className="flex items-center space-x-2">
+                  <ArrowLeft className="h-4 w-4" />
+                  <span>Back to Search</span>
+                </Link>
+              </Button>
+            </div>
+            <div className="text-center">
+              <h1 className="text-xl font-semibold text-gray-900">
+                Trip Results
+              </h1>
+            </div>
+            <div className="w-20"></div> {/* Spacer for centering */}
+          </div>
         </div>
-        
-        <h1 className="text-3xl md:text-4xl font-bold text-center mb-6 md:mb-8 text-gray-800">
+      </div>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">
           Trip Results
         </h1>
         

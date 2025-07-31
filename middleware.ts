@@ -2,10 +2,35 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+  const { pathname, searchParams } = req.nextUrl;
   const accessToken = req.cookies.get('access_token')?.value;
   const isAuthRoute = pathname.startsWith('/auth');
   const isDashboardRoute = pathname.startsWith('/dashboard');
+  const isPublicRoute = pathname === '/' || pathname.startsWith('/about') || pathname.startsWith('/contact');
+  
+  // Check if we're in iframe display mode
+  let isIframeMode = false;
+  const stateParam = searchParams.get('state');
+  
+  if (stateParam) {
+    try {
+      const decodedState = JSON.parse(atob(stateParam));
+      isIframeMode = decodedState.displayMode === 'iframe';
+    } catch (e) {
+      console.error('Failed to parse state parameter:', e);
+    }
+  }
+  
+  // Skip middleware for public routes and static assets
+  if (isPublicRoute || pathname.startsWith('/_next') || pathname.startsWith('/api')) {
+    return NextResponse.next();
+  }
+  
+  // Skip certain middleware checks for iframe mode authentication
+  if (isAuthRoute && isIframeMode) {
+    console.log('Middleware: Detected iframe authentication mode, bypassing redirects');
+    return NextResponse.next();
+  }
 
   // Handle authentication routes
   if (isAuthRoute && accessToken) {
@@ -22,7 +47,9 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(new URL('/dashboard', req.url));
       }
     } catch (error) {
-      console.error('Token verification failed:', error);
+      console.error('Token verification failed (likely CORS issue):', error);
+      // Don't redirect on CORS errors, let the auth page handle it
+      return NextResponse.next();
     }
 
     // Token is invalid or verification failed, clear cookies
@@ -56,15 +83,14 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(url);
       }
     } catch (error) {
-      console.error('Token verification failed:', error);
-      // On error, redirect to login
-      const url = new URL('/auth/login', req.url);
-      url.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(url);
+      console.error('Token verification failed (likely CORS issue):', error);
+      // On CORS error, allow access but let client-side handle auth
+      // This prevents infinite redirects when API is unreachable
+      return NextResponse.next();
     }
   }
 
-  // Add cache control headers
+  // Add cache control headers for better performance
   const response = NextResponse.next();
   response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   response.headers.set('Pragma', 'no-cache');

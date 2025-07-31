@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Bell } from 'lucide-react';
 import { useNotificationStore } from '@/lib/notification-store';
 import { NotificationApi } from '@/app/features/notifications/api';
@@ -18,16 +18,7 @@ export function NotificationButton() {
     addNotification 
   } = useNotificationStore();
 
-  useEffect(() => {
-    // Fetch notifications when component mounts
-    fetchNotifications();
-    
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -46,7 +37,16 @@ export function NotificationButton() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [addNotification]);
+
+  useEffect(() => {
+    // Fetch notifications when component mounts
+    fetchNotifications();
+    
+    // Poll for new notifications every 30 seconds
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
 
   const handleNotificationClick = async (id: string) => {
     try {
